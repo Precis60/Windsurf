@@ -79,6 +79,26 @@ app.post('/api/init-db', async (req, res) => {
   }
 });
 
+// Debug endpoint to check users
+app.get('/api/debug/users', async (req, res) => {
+  try {
+    const { query } = await import('./config/database.js');
+    const result = await query('SELECT id, email, first_name, last_name, role, is_active FROM users');
+    res.json({
+      users: result.rows,
+      count: result.rows.length
+    });
+  } catch (error) {
+    console.error('Debug users error:', error);
+    res.status(500).json({
+      error: {
+        message: 'Failed to fetch users',
+        details: error.message
+      }
+    });
+  }
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', customerRoutes);
