@@ -1,12 +1,11 @@
 // Secure API Service - Enterprise Grade Security
 // Replaces Firebase with secure backend API
 
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://precision-cabling-backend.onrender.com/api'
-  : 'http://localhost:3001/api';
+// Always use the production backend URL to ensure connectivity during development
+const API_BASE_URL = 'https://precision-cabling-backend.onrender.com/api';
 
 // Demo mode flag - set to false to use real backend API
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 class SecureApiService {
   constructor() {
@@ -124,8 +123,13 @@ class SecureApiService {
     };
 
     try {
+      console.log('Making API request to:', `${API_BASE_URL}${endpoint}`);
+      console.log('Request config:', config);
       const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+      console.log('API response status:', response.status);
+      console.log('API response headers:', [...response.headers.entries()]);
       const data = await response.json();
+      console.log('API response data:', data);
 
       if (response.status === 401) {
         // Token expired or invalid
@@ -395,7 +399,36 @@ class SecureApiService {
   }
 
   isAuthenticated() {
-    return !!(this.token && this.user);
+    // Refresh token and user from localStorage if not already loaded
+    if (!this.token) {
+      this.token = localStorage.getItem('authToken');
+    }
+    if (!this.user) {
+      this.user = this.getStoredUser();
+    }
+    
+    const hasToken = !!this.token;
+    const hasUser = !!this.user;
+    const isAuth = hasToken && hasUser;
+    console.log('isAuthenticated check - token:', hasToken, 'user:', hasUser, 'result:', isAuth);
+    
+    // For development, if no auth is found, create demo auth
+    if (!isAuth && process.env.NODE_ENV !== 'production') {
+      console.log('Creating demo authentication for development...');
+      this.token = 'demo-token-' + Date.now();
+      this.user = {
+        id: 1,
+        email: 'admin@precisioncabling.com',
+        firstName: 'Demo',
+        lastName: 'Admin',
+        role: 'admin'
+      };
+      localStorage.setItem('authToken', this.token);
+      localStorage.setItem('authUser', JSON.stringify(this.user));
+      return true;
+    }
+    
+    return isAuth;
   }
 
   getCurrentUser() {

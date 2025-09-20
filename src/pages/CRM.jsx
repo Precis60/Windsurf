@@ -11,6 +11,8 @@ const CRM = () => {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [showCustomerList, setShowCustomerList] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [formMessage, setFormMessage] = useState({ type: '', text: '' });
   const [customerForm, setCustomerForm] = useState({
     companyName: '',
     contactName: '',
@@ -54,52 +56,65 @@ const CRM = () => {
   }, [isAuthenticated]);
 
 
+  // Debug function to test basic functionality
+  const debugButtonClick = () => {
+    console.log('🟢 DEBUG: Basic button click works!');
+    console.log('🟢 DEBUG: customerForm state:', customerForm);
+    console.log('🟢 DEBUG: submitting state:', submitting);
+    console.log('🟢 DEBUG: isAuthenticated:', authService.isAuthenticated());
+    alert('DEBUG: Button click registered successfully!');
+  };
+
   // Customer Database functions
   const handleAddCustomer = async (e) => {
-    e.preventDefault();
+    e && e.preventDefault && e.preventDefault();
     console.log('=== HANDLE ADD CUSTOMER CALLED ===');
     console.log('Event:', e);
     console.log('Form data:', customerForm);
     console.log('Authentication status:', authService.isAuthenticated());
     console.log('Current user:', authService.getCurrentUser());
+    console.log('Local Storage Token:', localStorage.getItem('authToken'));
+    setFormMessage({ type: '', text: '' });
+    setSubmitting(true);
     
     // Frontend validation
     if (!customerForm.contactName.trim()) {
-      alert('Please enter a contact name.');
+      setFormMessage({ type: 'error', text: 'Please enter a contact name.' });
+      setSubmitting(false);
       return;
     }
     
     if (!customerForm.email.trim()) {
-      alert('Please enter an email address.');
+      setFormMessage({ type: 'error', text: 'Please enter an email address.' });
+      setSubmitting(false);
       return;
     }
     
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customerForm.email.trim())) {
-      alert('Please enter a valid email address.');
+      setFormMessage({ type: 'error', text: 'Please enter a valid email address.' });
+      setSubmitting(false);
       return;
     }
+    // Prepare payload outside try so it's available for error logging
+    const nameParts = customerForm.contactName.trim().split(' ');
+    const firstName = nameParts[0] || 'Customer';
+    const lastName = nameParts.slice(1).join(' ') || 'User';
+    const customerData = {
+      firstName: firstName,
+      lastName: lastName,
+      email: customerForm.email.trim(),
+      phone: (customerForm.phone || '').trim() || null,
+      company: (customerForm.companyName || '').trim() || null,
+      address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
+    };
     
     try {
-      // Convert frontend form data to backend expected format
-      const nameParts = customerForm.contactName.trim().split(' ');
-      const firstName = nameParts[0] || 'Customer';
-      const lastName = nameParts.slice(1).join(' ') || 'User';
-      
-      const customerData = {
-        firstName: firstName,
-        lastName: lastName,
-        email: customerForm.email.trim(),
-        phone: customerForm.phone.trim() || null,
-        company: customerForm.companyName.trim() || null,
-        address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
-      };
-      
       console.log('Sending customer data to backend:', customerData);
-      
+      console.log('Before API call - waiting for response...');
       const result = await customersService.create(customerData);
-      console.log('Customer created successfully:', result);
+      console.log('Customer created successfully - API response received:', result);
       
       setCustomerForm({
         companyName: '',
@@ -120,7 +135,8 @@ const CRM = () => {
       const customerList = Array.isArray(response) ? response : response.customers || [];
       setCustomers(customerList);
       
-      alert('Customer added successfully!');
+      setFormMessage({ type: 'success', text: 'Customer added successfully!' });
+      setSubmitting(false);
     } catch (error) {
       console.error('Detailed error adding customer:', error);
       console.error('Error message:', error.message);
@@ -132,11 +148,15 @@ const CRM = () => {
       // Check for specific error types
       if (error.message.includes('Authentication required')) {
         errorMessage += 'Please log in again.';
-        window.location.href = '/login';
+        setFormMessage({ type: 'error', text: errorMessage });
+        setSubmitting(false);
+        setTimeout(() => { window.location.href = '/login'; }, 500);
         return;
       } else if (error.message.includes('Session expired')) {
         errorMessage += 'Your session has expired. Please log in again.';
-        window.location.href = '/login';
+        setFormMessage({ type: 'error', text: errorMessage });
+        setSubmitting(false);
+        setTimeout(() => { window.location.href = '/login'; }, 500);
         return;
       } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
         errorMessage += 'Network error - backend server may not be running. Please check if the backend is started.';
@@ -157,7 +177,8 @@ const CRM = () => {
       console.log('Current auth status:', authService.isAuthenticated());
       console.log('=====================================');
       
-      alert(errorMessage);
+      setFormMessage({ type: 'error', text: errorMessage });
+      setSubmitting(false);
     }
   };
 
@@ -567,26 +588,87 @@ const CRM = () => {
                 onChange={(e) => setCustomerForm({...customerForm, notes: e.target.value})}
                 style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px', marginBottom: '1rem' }}
               />
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <button 
-                  type="submit" 
+              {/* Inline feedback message */}
+              {formMessage.text && (
+                <div 
+                  role="alert" 
                   style={{
-                    ...buttonStyle,
-                    background: editingCustomer ? '#28a745' : '#007bff'
-                  }}
-                  onClick={(e) => {
-                    console.log('Form submit button clicked');
-                    console.log('Current form data:', customerForm);
-                    console.log('Editing customer ID:', editingCustomer);
+                    marginBottom: '0.75rem',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: 6,
+                    border: `1px solid ${formMessage.type === 'error' ? '#f5c2c7' : '#badbcc'}`,
+                    background: formMessage.type === 'error' ? '#f8d7da' : '#d1e7dd',
+                    color: formMessage.type === 'error' ? '#842029' : '#0f5132'
                   }}
                 >
-                  {editingCustomer ? 'Update Customer' : 'Save Customer'}
+                  {formMessage.text}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button 
+                  type="button"
+                  style={{
+                    ...buttonStyle,
+                    background: submitting ? '#6c757d' : (editingCustomer ? '#28a745' : '#007bff'),
+                    opacity: submitting ? 0.8 : 1,
+                    cursor: submitting ? 'not-allowed' : 'pointer'
+                  }}
+                  disabled={submitting}
+                  onClick={async (e) => {
+                    console.log('🔴 SAVE BUTTON CLICKED - IMMEDIATE RESPONSE');
+                    alert('Save button clicked! Check console for details.');
+                    try {
+                      await handleAddCustomer(e);
+                    } catch (error) {
+                      console.error('🔴 ERROR IN BUTTON CLICK:', error);
+                      alert('Error: ' + error.message);
+                    }
+                  }}
+                >
+                  {submitting ? 'Saving…' : (editingCustomer ? 'Update Customer' : 'Save Customer')}
                 </button>
+                
+                <button 
+                  type="button" 
+                  style={{
+                    ...buttonStyle,
+                    background: '#28a745'
+                  }}
+                  onClick={debugButtonClick}
+                >
+                  DEBUG CLICK
+                </button>
+                
+                <button 
+                  type="button" 
+                  style={{
+                    ...buttonStyle,
+                    background: '#ffc107',
+                    color: '#000'
+                  }}
+                  onClick={() => {
+                    alert('IMMEDIATE RESPONSE - FILL TEST DATA!');
+                    console.log('🟡 FILL TEST DATA CLICKED');
+                    setCustomerForm({
+                      ...customerForm,
+                      contactName: 'Test User ' + Date.now(),
+                      email: `test${Date.now()}@example.com`,
+                      companyName: 'Test Company'
+                    });
+                    setFormMessage({ type: 'success', text: 'Test data filled successfully!' });
+                  }}
+                >
+                  FILL TEST DATA
+                </button>
+                
                 <button 
                   type="button" 
                   onClick={() => {
                     setShowCustomerForm(false);
                     setEditingCustomer(null);
+                    setFormMessage({ type: '', text: '' });
+                    setSubmitting(false);
                     setCustomerForm({
                       companyName: '',
                       contactName: '',
