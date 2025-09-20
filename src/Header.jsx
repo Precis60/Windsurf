@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import logo from "./assets/pca-logo.png";
 import "./Header.css";
 
 const pages = [
@@ -21,7 +20,6 @@ const Header = () => {
   return (
     <header className="header">
       <Link className="logo" to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}>
-  <img src={logo} alt="Precision Cabling & Automation Logo" style={{ height: '3.2rem', width: 'auto', marginRight: '16px', display: 'block' }} />
   Precision Cabling & Automation
 </Link>
       <button className="menu-btn" onClick={() => setMenuOpen((o) => !o)}>

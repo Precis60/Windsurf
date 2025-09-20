@@ -4,4 +4,18 @@ import react from '@vitejs/plugin-react'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunk for React and React Router
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          // Firebase chunk for all Firebase-related code
+          firebase: ['firebase/app', 'firebase/firestore', 'firebase/auth'],
+        },
+      },
+    },
+    // Increase chunk size warning limit to 1000kb
+    chunkSizeWarningLimit: 1000,
+  },
 })
