@@ -59,6 +59,26 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Database initialization endpoint
+app.post('/api/init-db', async (req, res) => {
+  try {
+    const setupDatabase = (await import('./scripts/setup-database.js')).default;
+    await setupDatabase();
+    res.status(200).json({
+      status: 'OK',
+      message: 'Database initialized successfully'
+    });
+  } catch (error) {
+    console.error('Database initialization failed:', error);
+    res.status(500).json({
+      error: {
+        message: 'Database initialization failed',
+        details: error.message
+      }
+    });
+  }
+});
+
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', customerRoutes);
