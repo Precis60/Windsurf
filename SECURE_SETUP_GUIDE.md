@@ -119,7 +119,7 @@ After setting environment variables, your backend will automatically create the 
    ? 'https://your-secure-domain.com/api'
    
    // TO:
-   ? 'https://your-backend-url-from-step-2/api'
+   ? 'https://precision-cabling-backend.onrender.com'
    ```
 3. **Save the file**
 
