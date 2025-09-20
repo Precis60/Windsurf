@@ -98,17 +98,38 @@ const CRM = () => {
     } catch (error) {
       console.error('Detailed error adding customer:', error);
       console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('Full error object:', JSON.stringify(error, null, 2));
       
       let errorMessage = 'Failed to add customer. ';
+      
+      // Check for specific error types
       if (error.message.includes('Authentication required')) {
         errorMessage += 'Please log in again.';
         window.location.href = '/login';
+        return;
       } else if (error.message.includes('Session expired')) {
         errorMessage += 'Your session has expired. Please log in again.';
         window.location.href = '/login';
+        return;
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage += 'Network error - backend server may not be running. Please check if the backend is started.';
+      } else if (error.message.includes('Validation failed')) {
+        errorMessage += 'Please check all required fields are filled correctly.';
+      } else if (error.message.includes('already exists')) {
+        errorMessage += 'A customer with this email already exists.';
       } else {
         errorMessage += `Error: ${error.message}`;
       }
+      
+      // Show detailed error in console for debugging
+      console.log('=== CUSTOMER CREATION ERROR DEBUG ===');
+      console.log('Customer data being sent:', customerData);
+      console.log('Error type:', typeof error);
+      console.log('Error constructor:', error.constructor.name);
+      console.log('Is network error:', error.message.includes('Failed to fetch'));
+      console.log('Current auth status:', authService.isAuthenticated());
+      console.log('=====================================');
       
       alert(errorMessage);
     }
@@ -244,7 +265,22 @@ const CRM = () => {
   return (
     <div className="page-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={{ color: '#22314a', margin: 0 }}>Customer Relationship Management</h1>
+        <div>
+          <h1 style={{ color: '#22314a', margin: 0 }}>Customer Relationship Management</h1>
+          {process.env.NODE_ENV === 'production' && (
+            <div style={{ 
+              background: '#fff3cd', 
+              color: '#856404', 
+              padding: '0.5rem 1rem', 
+              borderRadius: '4px', 
+              fontSize: '0.9rem',
+              marginTop: '0.5rem',
+              border: '1px solid #ffeaa7'
+            }}>
+              🚀 <strong>Demo Mode:</strong> Data is stored locally for demonstration
+            </div>
+          )}
+        </div>
         <button 
           onClick={() => {
             authService.logout();

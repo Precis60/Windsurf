@@ -5,6 +5,9 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://precision-cabling-backend.onrender.com/api'
   : 'http://localhost:3001/api';
 
+// Demo mode flag - set to true when backend is not available
+const DEMO_MODE = process.env.NODE_ENV === 'production';
+
 class SecureApiService {
   constructor() {
     this.token = localStorage.getItem('authToken');
@@ -13,6 +16,34 @@ class SecureApiService {
 
   // Authentication Methods
   async login(email, password) {
+    if (DEMO_MODE) {
+      // Demo mode - simulate login
+      if (email === 'admin@precisioncabling.com' && password === 'Admin123!') {
+        const demoUser = {
+          id: 1,
+          email: 'admin@precisioncabling.com',
+          firstName: 'Demo',
+          lastName: 'Admin',
+          role: 'admin'
+        };
+        const demoToken = 'demo-token-' + Date.now();
+        
+        this.token = demoToken;
+        this.user = demoUser;
+        
+        localStorage.setItem('authToken', this.token);
+        localStorage.setItem('authUser', JSON.stringify(this.user));
+        
+        return {
+          token: demoToken,
+          user: demoUser,
+          message: 'Login successful (Demo Mode)'
+        };
+      } else {
+        throw new Error('Invalid credentials');
+      }
+    }
+    
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -28,11 +59,11 @@ class SecureApiService {
         throw new Error(data.error?.message || 'Login failed');
       }
 
-      // Store secure token and user data
       this.token = data.token;
       this.user = data.user;
+      
       localStorage.setItem('authToken', this.token);
-      localStorage.setItem('user', JSON.stringify(this.user));
+      localStorage.setItem('authUser', JSON.stringify(this.user));
 
       return data;
     } catch (error) {
@@ -140,10 +171,65 @@ class SecureApiService {
 
   // Customer/CRM Methods
   async getCustomers() {
+    if (DEMO_MODE) {
+      // Demo mode - get customers from localStorage
+      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
+      
+      // Add some default demo customers if none exist
+      if (customers.length === 0) {
+        const defaultCustomers = [
+          {
+            id: 1,
+            firstName: 'John',
+            lastName: 'Smith',
+            email: 'john.smith@abcmfg.com',
+            phone: '(555) 123-4567',
+            company: 'ABC Manufacturing Corp',
+            address: '123 Industrial Blvd, Manufacturing District, CA 90210',
+            createdAt: '2025-01-15T10:00:00.000Z'
+          },
+          {
+            id: 2,
+            firstName: 'Sarah',
+            lastName: 'Johnson',
+            email: 'sarah@officecomplex.com',
+            phone: '(555) 987-6543',
+            company: 'Office Complex LLC',
+            address: '456 Business Park Dr, Suite 200, Business District, CA 90211',
+            createdAt: '2025-01-10T14:30:00.000Z'
+          }
+        ];
+        localStorage.setItem('demo_customers', JSON.stringify(defaultCustomers));
+        return { customers: defaultCustomers };
+      }
+      
+      return { customers };
+    }
+    
     return await this.secureRequest('/customers');
   }
 
   async createCustomer(customerData) {
+    if (DEMO_MODE) {
+      // Demo mode - simulate customer creation with localStorage
+      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
+      const newCustomer = {
+        id: Date.now(),
+        ...customerData,
+        createdAt: new Date().toISOString()
+      };
+      customers.push(newCustomer);
+      localStorage.setItem('demo_customers', JSON.stringify(customers));
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return {
+        message: 'Customer created successfully (Demo Mode)',
+        customer: newCustomer
+      };
+    }
+    
     return await this.secureRequest('/customers', {
       method: 'POST',
       body: JSON.stringify(customerData),
