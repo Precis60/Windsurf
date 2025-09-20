@@ -20,8 +20,11 @@ const Portal = lazy(() => import("./pages/Portal"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
+  // Determine basename for GitHub Pages
+  const basename = process.env.NODE_ENV === 'production' ? '/Windsurf' : '';
+  
   return (
-    <Router>
+    <Router basename={basename}>
       <Header />
       <main style={{ minHeight: "35vh", paddingTop: "3rem", paddingBottom: "3rem" }}>
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', fontSize: '1.2rem', color: '#22314a' }}>Loading...</div>}>
