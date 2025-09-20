@@ -17,20 +17,26 @@ This guide will walk you through setting up your complete secure infrastructure 
 
 ## 🔥 **Step 1: Database Setup (5 minutes)**
 
-### **Railway (Recommended - Easiest)**
+### **Supabase (Recommended - Always Works)**
 
-1. **Go to**: [railway.app](https://railway.app)
+1. **Go to**: [supabase.com](https://supabase.com)
 2. **Sign up** with your GitHub account
-3. **New Project** → **Provision PostgreSQL**
-4. **Copy these details** from the "Connect" tab:
+3. **Create new project**:
+   - **Name**: `precision-cabling`
+   - **Database Password**: Create a strong password (save this!)
+   - **Region**: Choose closest to you
+   - **Click "Create new project"**
+4. **Wait 2-3 minutes** for setup to complete
+5. **Go to Settings** → **Database**
+6. **Copy these connection details**:
    ```
-   Host: [copy this]
-   Port: [copy this] 
-   Database: [copy this]
-   Username: [copy this]
-   Password: [copy this]
+   Host: db.[your-project-ref].supabase.co
+   Port: 5432
+   Database: postgres
+   Username: postgres
+   Password: [the password you created]
    ```
-5. **Keep this tab open** - you'll need these details in Step 3
+7. **Also copy the "Connection string"** (we'll use this)
 
 ✅ **Database ready!**
 
@@ -38,22 +44,22 @@ This guide will walk you through setting up your complete secure infrastructure 
 
 ## 🚀 **Step 2: Backend Deployment (10 minutes)**
 
-### **Deploy to Railway**
-
-1. **In Railway dashboard**: **New** → **GitHub Repo**
-2. **Select**: `Precis60/Windsurf`
-3. **Root Directory**: `/backend`
-4. **Railway will auto-deploy** your backend
-5. **Copy the deployment URL** (looks like: `https://backend-production-xxxx.up.railway.app`)
-
-### **Alternative: Render**
+### **Render (Recommended - Reliable)**
 
 1. **Go to**: [render.com](https://render.com)
-2. **New** → **Web Service** → **Connect GitHub**
-3. **Repository**: `Precis60/Windsurf`
-4. **Root Directory**: `backend`
-5. **Build Command**: `npm install`
-6. **Start Command**: `npm start`
+2. **Sign up** with your GitHub account
+3. **New** → **Web Service**
+4. **Connect your GitHub** and select: `Precis60/Windsurf`
+5. **Configure the service**:
+   - **Name**: `precision-cabling-backend`
+   - **Root Directory**: `backend`
+   - **Environment**: `Node`
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start`
+   - **Instance Type**: `Free` (for now)
+6. **Click "Create Web Service"**
+7. **Wait for deployment** (3-5 minutes)
+8. **Copy your backend URL** (looks like: `https://precision-cabling-backend.onrender.com`)
 
 ✅ **Backend deployed!**
 
@@ -61,9 +67,9 @@ This guide will walk you through setting up your complete secure infrastructure 
 
 ## ⚙️ **Step 3: Environment Configuration (5 minutes)**
 
-### **Set Environment Variables in Railway/Render**
+### **Set Environment Variables in Render**
 
-In your hosting provider's dashboard, add these environment variables:
+In your Render dashboard, go to your service and click "Environment":
 
 ```bash
 NODE_ENV=production
