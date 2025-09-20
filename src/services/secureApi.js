@@ -2,7 +2,7 @@
 // Replaces Firebase with secure backend API
 
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://your-secure-domain.com/api'  // Replace with your secure domain
+  ? 'https://precision-cabling-backend.onrender.com/api'
   : 'http://localhost:3001/api';
 
 class SecureApiService {
