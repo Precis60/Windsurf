@@ -18,6 +18,7 @@ const Calendar = lazy(() => import("./pages/Calendar"));
 const CRM = lazy(() => import("./pages/CRM"));
 const SupportPortal = lazy(() => import("./pages/SupportPortal"));
 const Portal = lazy(() => import("./pages/Portal"));
+const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
@@ -81,6 +82,9 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/company-policies" element={<CompanyPolicies />} />
             <Route path="/about-us" element={<AboutUs />} />
+            
+            {/* Authentication route */}
+            <Route path="/login" element={<Login onLogin={handleLogin} />} />
             
             {/* Protected routes */}
             <Route path="/calendar" element={
