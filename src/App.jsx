@@ -19,6 +19,7 @@ const CRM = lazy(() => import("./pages/CRM"));
 const SupportPortal = lazy(() => import("./pages/SupportPortal"));
 const Portal = lazy(() => import("./pages/Portal"));
 const Login = lazy(() => import("./pages/Login"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
@@ -87,6 +88,11 @@ function App() {
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
             
             {/* Protected routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/calendar" element={
               <ProtectedRoute>
                 <Calendar />
