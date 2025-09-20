@@ -64,18 +64,60 @@ const Calendar = () => {
   // Add new appointment to secure API
   const handleAddAppointment = async (e) => {
     e.preventDefault();
+    console.log('Attempting to create appointment with data:', formData);
+    
     try {
-      await appointmentsService.create(formData);
+      // Convert frontend data format to backend expected format
+      const appointmentData = {
+        title: formData.title,
+        description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
+        appointmentDate: `${formData.date}T${formData.time}:00.000Z`,
+        durationMinutes: calculateDurationMinutes(formData.time, formData.endTime)
+      };
+      
+      console.log('Sending appointment data to backend:', appointmentData);
+      
+      const result = await appointmentsService.create(appointmentData);
+      console.log('Appointment created successfully:', result);
+      
       setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' });
       setShowAddForm(false);
+      
       // Reload appointments
       const response = await appointmentsService.getAll();
       const appointmentList = Array.isArray(response) ? response : response.appointments || [];
       setAppointments(appointmentList);
+      
+      alert('Appointment added successfully!');
     } catch (error) {
-      console.error('Error adding appointment:', error);
-      alert('Failed to add appointment. Please try again.');
+      console.error('Detailed error adding appointment:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      
+      let errorMessage = 'Failed to add appointment. ';
+      if (error.message.includes('Authentication required')) {
+        errorMessage += 'Please log in again.';
+        window.location.href = '/login';
+      } else if (error.message.includes('Session expired')) {
+        errorMessage += 'Your session has expired. Please log in again.';
+        window.location.href = '/login';
+      } else {
+        errorMessage += `Error: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     }
+  };
+
+  // Helper function to calculate duration in minutes
+  const calculateDurationMinutes = (startTime, endTime) => {
+    const [startHours, startMinutes] = startTime.split(':').map(Number);
+    const [endHours, endMinutes] = endTime.split(':').map(Number);
+    
+    const startTotalMinutes = startHours * 60 + startMinutes;
+    const endTotalMinutes = endHours * 60 + endMinutes;
+    
+    return endTotalMinutes - startTotalMinutes;
   };
 
   // Edit appointment
