@@ -6,7 +6,6 @@ const CRM = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-
   // Customer Database state
   const [customers, setCustomers] = useState([]);
   const [showCustomerForm, setShowCustomerForm] = useState(false);
@@ -330,143 +329,6 @@ const CRM = () => {
       </div>
     </div>
 
-    {/* Password Manager Section */}
-    <div style={{ marginTop: '3rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ color: '#22314a', margin: 0 }}>🔐 Company Password Manager</h2>
-        <button 
-          onClick={() => {
-            setShowPasswordForm(!showPasswordForm);
-            setEditingCredential(null);
-            setCredentialForm({ serviceName: '', username: '', password: '', website: '', notes: '' });
-          }}
-          style={buttonStyle}
-        >
-          {showPasswordForm ? 'Cancel' : 'Add New Credential'}
-        </button>
-      </div>
-
-      {/* Add/Edit Credential Form */}
-      {showPasswordForm && (
-        <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef', marginBottom: '2rem' }}>
-          <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>
-            {editingCredential ? 'Edit Credential' : 'Add New Credential'}
-          </h3>
-          <form onSubmit={editingCredential ? handleUpdateCredential : handleAddCredential}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-              <input
-                type="text"
-                placeholder="Service/Software Name"
-                value={credentialForm.serviceName}
-                onChange={(e) => setCredentialForm({...credentialForm, serviceName: e.target.value})}
-                required
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <input
-                type="text"
-                placeholder="Username/Email"
-                value={credentialForm.username}
-                onChange={(e) => setCredentialForm({...credentialForm, username: e.target.value})}
-                required
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={credentialForm.password}
-                onChange={(e) => setCredentialForm({...credentialForm, password: e.target.value})}
-                required
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <input
-                type="url"
-                placeholder="Website URL (optional)"
-                value={credentialForm.website}
-                onChange={(e) => setCredentialForm({...credentialForm, website: e.target.value})}
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-            </div>
-            <textarea
-              placeholder="Notes (optional)"
-              value={credentialForm.notes}
-              onChange={(e) => setCredentialForm({...credentialForm, notes: e.target.value})}
-              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '60px', marginBottom: '1rem' }}
-            />
-            <button type="submit" style={buttonStyle}>
-              {editingCredential ? 'Update Credential' : 'Save Credential'}
-            </button>
-          </form>
-        </div>
-      )}
-
-      {/* Saved Credentials List */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '1rem' }}>
-        {savedCredentials.length === 0 ? (
-          <div style={{ background: '#f8f9fa', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', textAlign: 'center', color: '#666' }}>
-            <p>No credentials saved yet. Click "Add New Credential" to get started.</p>
-          </div>
-        ) : (
-          savedCredentials.map(credential => (
-            <div key={credential.id} style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #dee2e6', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                <h4 style={{ color: '#22314a', margin: 0, fontSize: '1.1rem' }}>{credential.serviceName}</h4>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button 
-                    onClick={() => handleEditCredential(credential)}
-                    style={{ ...buttonStyle, padding: '0.25rem 0.5rem', fontSize: '0.8rem', background: '#28a745' }}
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteCredential(credential.id)}
-                    style={{ ...buttonStyle, padding: '0.25rem 0.5rem', fontSize: '0.8rem', background: '#dc3545' }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              
-              <div style={{ marginBottom: '0.5rem' }}>
-                <strong>Username:</strong> {credential.username}
-              </div>
-              
-              <div style={{ marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <strong>Password:</strong> 
-                <span style={{ fontFamily: 'monospace' }}>
-                  {showPasswords[credential.id] ? credential.password : '••••••••'}
-                </span>
-                <button 
-                  onClick={() => togglePasswordVisibility(credential.id)}
-                  style={{ ...buttonStyle, padding: '0.25rem 0.5rem', fontSize: '0.7rem', background: '#6c757d' }}
-                >
-                  {showPasswords[credential.id] ? 'Hide' : 'Show'}
-                </button>
-              </div>
-              
-              {credential.website && (
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <strong>Website:</strong> 
-                  <a href={credential.website} target="_blank" rel="noopener noreferrer" style={{ color: '#007bff', textDecoration: 'none' }}>
-                    {credential.website}
-                  </a>
-                </div>
-              )}
-              
-              {credential.notes && (
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <strong>Notes:</strong> {credential.notes}
-                </div>
-              )}
-              
-              <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem' }}>
-                Added: {credential.dateAdded}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-
     {/* Customer Management Section */}
     {(showCustomerForm || showCustomerList) && (
       <div style={{ marginTop: '3rem' }}>
@@ -583,7 +445,7 @@ const CRM = () => {
                 customers.map(customer => (
                   <div key={customer.id} style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #dee2e6', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <h4 style={{ color: '#22314a', margin: 0, fontSize: '1.2rem' }}>{customer.companyName}</h4>
+                      <h4 style={{ color: '#22314a', margin: 0, fontSize: '1.2rem' }}>{customer.firstName} {customer.lastName}</h4>
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button 
                           onClick={() => handleEditCustomer(customer)}
@@ -601,7 +463,7 @@ const CRM = () => {
                     </div>
                     
                     <div style={{ marginBottom: '0.5rem' }}>
-                      <strong>Contact:</strong> {customer.contactName}
+                      <strong>Company:</strong> {customer.company}
                     </div>
                     
                     <div style={{ marginBottom: '0.5rem' }}>
@@ -621,27 +483,11 @@ const CRM = () => {
                     {customer.address && (
                       <div style={{ marginBottom: '0.5rem' }}>
                         <strong>Address:</strong> {customer.address}
-                        {customer.city && `, ${customer.city}`}
-                        {customer.state && `, ${customer.state}`}
-                        {customer.zipCode && ` ${customer.zipCode}`}
-                      </div>
-                    )}
-                    
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong>Project Type:</strong> 
-                      <span style={{ background: '#e3f2fd', color: '#1976d2', padding: '0.25rem 0.5rem', borderRadius: '4px', fontSize: '0.8rem', marginLeft: '0.5rem' }}>
-                        {customer.projectType}
-                      </span>
-                    </div>
-                    
-                    {customer.notes && (
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <strong>Notes:</strong> {customer.notes}
                       </div>
                     )}
                     
                     <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem' }}>
-                      Added: {customer.dateAdded}
+                      Added: {new Date(customer.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                 ))
