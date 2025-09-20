@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { appointmentsService } from '../services/firebaseService';
+import { appointmentsService, authService } from '../services/secureApi';
 
 const Calendar = () => {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(true);
   
   // Calendar state
   const [currentView, setCurrentView] = useState('monthly');
@@ -33,106 +32,46 @@ const Calendar = () => {
     'Preventive Maintenance', 'System Integration', 'Quality Assurance', 'Follow-up'
   ];
 
-  // Authentication functions
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setLoginError('');
-    
-    // Hardcoded credentials for security (in production, this would be handled by a backend)
-    const validCredentials = {
-      username: 'admin',
-      password: 'calendar2025'
-    };
-    
-    if (loginData.username === validCredentials.username && loginData.password === validCredentials.password) {
-      setIsAuthenticated(true);
-      // Store in sessionStorage (expires when browser session ends)
-      sessionStorage.setItem('calendarAuth', 'true');
-    } else {
-      setLoginError('Invalid username or password');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setLoginData({ username: '', password: '' });
-    sessionStorage.removeItem('calendarAuth');
-  };
-
-  // Clear authentication when component unmounts or page is left
+  // Check authentication on component mount
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.removeItem('calendarAuth');
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setLoading(false);
     };
     
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        sessionStorage.removeItem('calendarAuth');
-        setIsAuthenticated(false);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      sessionStorage.removeItem('calendarAuth');
-    };
+    checkAuth();
   }, []);
 
-  // Load appointments from Firebase
+  // Load appointments from secure API
   useEffect(() => {
     if (isAuthenticated) {
       const loadAppointments = async () => {
         try {
-          const firebaseAppointments = await appointmentsService.getAll();
-          if (firebaseAppointments.length > 0) {
-            setAppointments(firebaseAppointments);
-          } else {
-            // Add default appointments to Firebase if none exist
-            const defaultAppointments = [
-              { title: 'Client Site Survey', client: 'ABC Manufacturing', date: '2025-01-20', time: '10:00', endTime: '12:00', description: 'Initial site assessment for network infrastructure', category: 'Site Survey', address: '123 Industrial Blvd, Manufacturing District' },
-              { title: 'Network Infrastructure Install', client: 'Office Complex', date: '2025-01-25', time: '09:00', endTime: '17:00', description: 'Complete network setup and configuration', category: 'Network Installation', address: '456 Business Park Dr, Suite 200' },
-              { title: 'Safety Training & Equipment Inspection', client: 'Internal', date: '2025-02-01', time: '14:00', endTime: '16:00', description: 'Quarterly safety review and equipment maintenance', category: 'Safety Inspection', address: 'Company Headquarters' }
-            ];
-            
-            for (const appointment of defaultAppointments) {
-              await appointmentsService.add(appointment);
-            }
-            
-            const updatedAppointments = await appointmentsService.getAll();
-            setAppointments(updatedAppointments);
-          }
+          const response = await appointmentsService.getAll();
+          const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+          setAppointments(appointmentList);
         } catch (error) {
           console.error('Error loading appointments:', error);
-          // Fallback to localStorage if Firebase fails
-          const savedAppointments = localStorage.getItem('appointments');
-          if (savedAppointments) {
-            setAppointments(JSON.parse(savedAppointments));
-          }
+          setAppointments([]);
         }
       };
       
       loadAppointments();
-      
-      // Set up real-time listener
-      const unsubscribe = appointmentsService.onSnapshot((appointments) => {
-        setAppointments(appointments);
-      });
-      
-      return () => unsubscribe();
     }
   }, [isAuthenticated]);
 
-  // Add new appointment to Firebase
+  // Add new appointment to secure API
   const handleAddAppointment = async (e) => {
     e.preventDefault();
     try {
-      await appointmentsService.add(formData);
+      await appointmentsService.create(formData);
       setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' });
       setShowAddForm(false);
+      // Reload appointments
+      const response = await appointmentsService.getAll();
+      const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+      setAppointments(appointmentList);
     } catch (error) {
       console.error('Error adding appointment:', error);
       alert('Failed to add appointment. Please try again.');
@@ -146,7 +85,7 @@ const Calendar = () => {
     setShowAddForm(true);
   };
 
-  // Update appointment in Firebase
+  // Update appointment in secure API
   const handleUpdateAppointment = async (e) => {
     e.preventDefault();
     try {
@@ -154,17 +93,25 @@ const Calendar = () => {
       setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' });
       setEditingAppointment(null);
       setShowAddForm(false);
+      // Reload appointments
+      const response = await appointmentsService.getAll();
+      const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+      setAppointments(appointmentList);
     } catch (error) {
       console.error('Error updating appointment:', error);
       alert('Failed to update appointment. Please try again.');
     }
   };
 
-  // Delete appointment from Firebase
+  // Delete appointment from secure API
   const handleDeleteAppointment = async (id) => {
     if (window.confirm('Are you sure you want to delete this appointment?')) {
       try {
         await appointmentsService.delete(id);
+        // Reload appointments
+        const response = await appointmentsService.getAll();
+        const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+        setAppointments(appointmentList);
       } catch (error) {
         console.error('Error deleting appointment:', error);
         alert('Failed to delete appointment. Please try again.');
@@ -254,69 +201,65 @@ const Calendar = () => {
     background: '#1a2538'
   };
 
-  // If not authenticated, show login form
+  // If loading, show loading state
+  if (loading) {
+    return (
+      <div className="page-content" style={{ 
+        padding: '2rem', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '50vh' 
+      }}>
+        <div style={{ textAlign: 'center', color: '#666' }}>
+          <h2>Loading Calendar...</h2>
+          <p>Please wait while we load your calendar data.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show message to login
   if (!isAuthenticated) {
     return (
       <div className="page-content" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ background: '#f8f9fa', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', textAlign: 'center' }}>
-          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>Calendar Access</h1>
-          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>Please login to access the calendar management system.</p>
+          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>🔒 Calendar Access Required</h1>
+          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>
+            Please log in to access the secure calendar management system.
+          </p>
           
-          <form onSubmit={handleLogin} style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <input
-              type="text"
-              placeholder="Username"
-              value={loginData.username}
-              onChange={(e) => setLoginData({...loginData, username: e.target.value})}
-              required
-              style={{ 
-                width: '100%', 
-                padding: '0.75rem', 
-                margin: '0.5rem 0', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc',
-                fontSize: '1rem'
-              }}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={loginData.password}
-              onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-              required
-              style={{ 
-                width: '100%', 
-                padding: '0.75rem', 
-                margin: '0.5rem 0', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc',
-                fontSize: '1rem'
-              }}
-            />
-            {loginError && (
-              <div style={{ color: '#dc3545', margin: '0.5rem 0', fontSize: '0.9rem' }}>
-                {loginError}
-              </div>
-            )}
-            <button 
-              type="submit" 
-              style={{
-                ...buttonStyle,
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                marginTop: '1rem'
-              }}
-            >
-              Login to Calendar
-            </button>
-          </form>
-          
-          <div style={{ marginTop: '2rem', padding: '1rem', background: '#e3f2fd', borderRadius: '4px', fontSize: '0.9rem', color: '#1976d2' }}>
-            <strong>Demo Credentials:</strong><br/>
-            Username: admin<br/>
-            Password: calendar2025
+          <div style={{
+            background: '#e8f5e8',
+            border: '1px solid #4caf50',
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <p style={{ 
+              margin: 0, 
+              color: '#2e7d32',
+              fontSize: '14px'
+            }}>
+              🔐 <strong>Secure Access:</strong> This calendar contains sensitive business information and requires authentication.
+            </p>
           </div>
+
+          <a 
+            href="/login" 
+            style={{
+              background: '#22314a',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '16px',
+              fontWeight: '500',
+              display: 'inline-block'
+            }}
+          >
+            Go to Login Page
+          </a>
         </div>
       </div>
     );
@@ -326,7 +269,14 @@ const Calendar = () => {
     <div className="page-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h1 style={{ color: '#22314a', margin: 0 }}>Calendar Management</h1>
-        <button onClick={handleLogout} style={{...buttonStyle, background: '#dc3545'}}>
+        <button 
+          onClick={() => {
+            authService.logout();
+            setIsAuthenticated(false);
+            window.location.href = '/';
+          }} 
+          style={{...buttonStyle, background: '#dc3545'}}
+        >
           Logout
         </button>
       </div>
