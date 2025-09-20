@@ -11,7 +11,7 @@ const Calendar = () => {
   const [currentView, setCurrentView] = useState('monthly');
   const [appointments, setAppointments] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingAppointment, setEditingA   ppointment] = useState(null);
+  const [editingAppointment, setEditingAppointment] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [formData, setFormData] = useState({
     title: '',
@@ -30,7 +30,7 @@ const Calendar = () => {
     'Maintenance', 'Repair', 'Consultation', 'Training', 'Safety Inspection',
     'Project Planning', 'Client Meeting ', 'Troubleshooting', 'Upgrade',
     'Testing & Commissioning', 'Documentation', 'Emergency Call',
-    'Preventive Maintenance', 'System Integration', 'Quality Assurance', 'Follow-up'7yghj,vv      
+    'Preventive Maintenance', 'System Integration', 'Quality Assurance', 'Follow-up'
   ];
 
   // Authentication functions
