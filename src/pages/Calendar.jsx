@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { appointmentsService, authService, customersService } from '../services/secureApi';
+import AnalogTimePicker from '../components/AnalogTimePicker';
 
 const Calendar = () => {
   // Authentication state
@@ -53,6 +54,7 @@ const Calendar = () => {
           // Load appointments
           const appointmentsResponse = await appointmentsService.getAll();
           const appointmentList = Array.isArray(appointmentsResponse) ? appointmentsResponse : appointmentsResponse.appointments || [];
+          console.log('Loaded appointments:', appointmentList);
           setAppointments(appointmentList);
           
           // Load customers
@@ -96,6 +98,7 @@ const Calendar = () => {
       // Reload appointments
       const response = await appointmentsService.getAll();
       const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+      console.log('Reloaded appointments after creation:', appointmentList);
       setAppointments(appointmentList);
       
       alert('Appointment added successfully!');
@@ -197,7 +200,15 @@ const Calendar = () => {
   // Get appointments for a specific date
   const getAppointmentsForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return appointments.filter(apt => apt.date === dateStr);
+    return appointments.filter(apt => {
+      // Handle both old format (apt.date) and new backend format (apt.appointmentDate)
+      const appointmentDate = apt.appointmentDate || apt.date;
+      if (!appointmentDate) return false;
+      
+      // Extract date part from ISO string
+      const aptDateStr = appointmentDate.split('T')[0];
+      return aptDateStr === dateStr;
+    });
   };
 
   // Generate calendar days for monthly view
@@ -419,21 +430,15 @@ const Calendar = () => {
                 required
                 style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
               />
-              <input
-                type="time"
-                placeholder="Start Time"
+              <AnalogTimePicker
+                label="Start Time"
                 value={formData.time}
-                onChange={(e) => setFormData({...formData, time: e.target.value})}
-                required
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
+                onChange={(time) => setFormData({...formData, time: time})}
               />
-              <input
-                type="time"
-                placeholder="End Time"
+              <AnalogTimePicker
+                label="End Time"
                 value={formData.endTime}
-                onChange={(e) => setFormData({...formData, endTime: e.target.value})}
-                required
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
+                onChange={(time) => setFormData({...formData, endTime: time})}
               />
               <select
                 value={formData.category}
