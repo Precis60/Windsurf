@@ -1,58 +1,20 @@
 import React, { useState, useEffect } from "react";
+import { authService } from '../services/secureApi';
 
 const Portal = () => {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Authentication functions
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setLoginError('');
-    
-    // Hardcoded credentials for security (in production, this would be handled by a backend)
-    const validCredentials = {
-      username: 'admin',
-      password: 'calendar2025'
-    };
-    
-    if (loginData.username === validCredentials.username && loginData.password === validCredentials.password) {
-      setIsAuthenticated(true);
-      // Store in sessionStorage (expires when browser session ends)
-      sessionStorage.setItem('portalAuth', 'true');
-    } else {
-      setLoginError('Invalid username or password');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setLoginData({ username: '', password: '' });
-    sessionStorage.removeItem('portalAuth');
-  };
-
-  // Clear authentication when component unmounts or page is left
+  // Check authentication on component mount
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.removeItem('portalAuth');
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setLoading(false);
     };
     
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        sessionStorage.removeItem('portalAuth');
-        setIsAuthenticated(false);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      sessionStorage.removeItem('portalAuth');
-    };
+    checkAuth();
   }, []);
 
   // Button styles
@@ -66,69 +28,65 @@ const Portal = () => {
     margin: '0 0.5rem'
   };
 
-  // If not authenticated, show login form
+  // If loading, show loading state
+  if (loading) {
+    return (
+      <div className="page-content" style={{ 
+        padding: '2rem', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '50vh' 
+      }}>
+        <div style={{ textAlign: 'center', color: '#666' }}>
+          <h2>Loading Portal...</h2>
+          <p>Please wait while we load your portal data.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show message to login
   if (!isAuthenticated) {
     return (
       <div className="page-content" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ background: '#f8f9fa', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', textAlign: 'center' }}>
-          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>Portal Access</h1>
-          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>Please login to access the client and staff portal system.</p>
+          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>🔒 Portal Access Required</h1>
+          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>
+            Please log in to access the secure business portal system.
+          </p>
           
-          <form onSubmit={handleLogin} style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <input
-              type="text"
-              placeholder="Username"
-              value={loginData.username}
-              onChange={(e) => setLoginData({...loginData, username: e.target.value})}
-              required
-              style={{ 
-                width: '100%', 
-                padding: '0.75rem', 
-                margin: '0.5rem 0', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc',
-                fontSize: '1rem'
-              }}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={loginData.password}
-              onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-              required
-              style={{ 
-                width: '100%', 
-                padding: '0.75rem', 
-                margin: '0.5rem 0', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc',
-                fontSize: '1rem'
-              }}
-            />
-            {loginError && (
-              <div style={{ color: '#dc3545', margin: '0.5rem 0', fontSize: '0.9rem' }}>
-                {loginError}
-              </div>
-            )}
-            <button 
-              type="submit" 
-              style={{
-                ...buttonStyle,
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                marginTop: '1rem'
-              }}
-            >
-              Login to Portal
-            </button>
-          </form>
-          
-          <div style={{ marginTop: '2rem', padding: '1rem', background: '#e3f2fd', borderRadius: '4px', fontSize: '0.9rem', color: '#1976d2' }}>
-            <strong>Demo Credentials:</strong><br/>
-            Username: admin<br/>
-            Password: calendar2025
+          <div style={{
+            background: '#e8f5e8',
+            border: '1px solid #4caf50',
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <p style={{ 
+              margin: 0, 
+              color: '#2e7d32',
+              fontSize: '14px'
+            }}>
+              🔐 <strong>Secure Access:</strong> This portal contains sensitive business information and requires authentication.
+            </p>
           </div>
+
+          <a 
+            href="/login" 
+            style={{
+              background: '#22314a',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '16px',
+              fontWeight: '500',
+              display: 'inline-block'
+            }}
+          >
+            Go to Login Page
+          </a>
         </div>
       </div>
     );
@@ -138,7 +96,14 @@ const Portal = () => {
     <div className="page-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h1 style={{ color: '#22314a', margin: 0 }}>Client & Staff Portal</h1>
-        <button onClick={handleLogout} style={{...buttonStyle, background: '#dc3545'}}>
+        <button 
+          onClick={() => {
+            authService.logout();
+            setIsAuthenticated(false);
+            window.location.href = '/';
+          }} 
+          style={{...buttonStyle, background: '#dc3545'}}
+        >
           Logout
         </button>
       </div>

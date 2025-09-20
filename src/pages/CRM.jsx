@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { credentialsService, customersService } from '../services/firebaseService';
+import { customersService, authService } from '../services/secureApi';
 
 const CRM = () => {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [loginError, setLoginError] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  // Password Manager state
-  const [savedCredentials, setSavedCredentials] = useState([]);
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const [editingCredential, setEditingCredential] = useState(null);
-  const [credentialForm, setCredentialForm] = useState({
-    serviceName: '',
-    username: '',
-    password: '',
-    website: '',
-    notes: ''
-  });
-  const [showPasswords, setShowPasswords] = useState({});
 
   // Customer Database state
   const [customers, setCustomers] = useState([]);
@@ -38,216 +25,57 @@ const CRM = () => {
     notes: ''
   });
 
-  // Authentication functions
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setLoginError('');
-    
-    // Hardcoded credentials for security (in production, this would be handled by a backend)
-    const validCredentials = {
-      username: 'admin',
-      password: 'calendar2025'
-    };
-    
-    if (loginData.username === validCredentials.username && loginData.password === validCredentials.password) {
-      setIsAuthenticated(true);
-      // Store in sessionStorage (expires when browser session ends)
-      sessionStorage.setItem('crmAuth', 'true');
-    } else {
-      setLoginError('Invalid username or password');
-    }
-  };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setLoginData({ username: '', password: '' });
-    sessionStorage.removeItem('crmAuth');
-  };
-
-  // Clear authentication when component unmounts or page is left
+  // Check authentication on component mount
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.removeItem('crmAuth');
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setLoading(false);
     };
     
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        sessionStorage.removeItem('crmAuth');
-        setIsAuthenticated(false);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      sessionStorage.removeItem('crmAuth');
-    };
+    checkAuth();
   }, []);
 
-  // Load saved credentials from Firebase
-  useEffect(() => {
-    if (isAuthenticated) {
-      const loadCredentials = async () => {
-        try {
-          const firebaseCredentials = await credentialsService.getAll();
-          setSavedCredentials(firebaseCredentials);
-        } catch (error) {
-          console.error('Error loading credentials:', error);
-          // Fallback to localStorage if Firebase fails
-          const savedCreds = localStorage.getItem('companyCredentials');
-          if (savedCreds) {
-            setSavedCredentials(JSON.parse(savedCreds));
-          }
-        }
-      };
-      
-      loadCredentials();
-      
-      // Set up real-time listener for credentials
-      const unsubscribe = credentialsService.onSnapshot((credentials) => {
-        setSavedCredentials(credentials);
-      });
-      
-      return () => unsubscribe();
-    }
-  }, [isAuthenticated]);
-
-  // Password Manager functions
-  const handleAddCredential = async (e) => {
-    e.preventDefault();
-    try {
-      const newCredential = {
-        ...credentialForm,
-        dateAdded: new Date().toLocaleDateString()
-      };
-      await credentialsService.add(newCredential);
-      setCredentialForm({ serviceName: '', username: '', password: '', website: '', notes: '' });
-      setShowPasswordForm(false);
-    } catch (error) {
-      console.error('Error adding credential:', error);
-      alert('Failed to add credential. Please try again.');
-    }
-  };
-
-  const handleUpdateCredential = async (e) => {
-    e.preventDefault();
-    try {
-      await credentialsService.update(editingCredential, credentialForm);
-      setCredentialForm({ serviceName: '', username: '', password: '', website: '', notes: '' });
-      setEditingCredential(null);
-      setShowPasswordForm(false);
-    } catch (error) {
-      console.error('Error updating credential:', error);
-      alert('Failed to update credential. Please try again.');
-    }
-  };
-
-  const handleEditCredential = (credential) => {
-    setCredentialForm({
-      serviceName: credential.serviceName,
-      username: credential.username,
-      password: credential.password,
-      website: credential.website,
-      notes: credential.notes
-    });
-    setEditingCredential(credential.id);
-    setShowPasswordForm(true);
-  };
-
-  const handleDeleteCredential = async (id) => {
-    if (window.confirm('Are you sure you want to delete this credential?')) {
-      try {
-        await credentialsService.delete(id);
-      } catch (error) {
-        console.error('Error deleting credential:', error);
-        alert('Failed to delete credential. Please try again.');
-      }
-    }
-  };
-
-  const togglePasswordVisibility = (id) => {
-    setShowPasswords(prev => ({ ...prev, [id]: !prev[id] }));
-  };
-
-  // Load saved customers from Firebase
+  // Load customers from secure API
   useEffect(() => {
     if (isAuthenticated) {
       const loadCustomers = async () => {
         try {
-          const firebaseCustomers = await customersService.getAll();
-          if (firebaseCustomers.length > 0) {
-            setCustomers(firebaseCustomers);
-          } else {
-            // Add default customers to Firebase if none exist
-            const defaultCustomers = [
-              {
-                companyName: 'ABC Manufacturing Corp',
-                contactName: 'John Smith',
-                email: 'john.smith@abcmfg.com',
-                phone: '(555) 123-4567',
-                address: '123 Industrial Blvd',
-                city: 'Manufacturing District',
-                state: 'CA',
-                zipCode: '90210',
-                projectType: 'Network Infrastructure',
-                notes: 'Large manufacturing facility requiring comprehensive network setup',
-                dateAdded: '2025-01-15'
-              },
-              {
-                companyName: 'Office Complex LLC',
-                contactName: 'Sarah Johnson',
-                email: 'sarah@officecomplex.com',
-                phone: '(555) 987-6543',
-                address: '456 Business Park Dr, Suite 200',
-                city: 'Business District',
-                state: 'CA',
-                zipCode: '90211',
-                projectType: 'Cable Installation',
-                notes: 'Multi-floor office building with structured cabling needs',
-                dateAdded: '2025-01-10'
-              }
-            ];
-            
-            for (const customer of defaultCustomers) {
-              await customersService.add(customer);
-            }
-            
-            const updatedCustomers = await customersService.getAll();
-            setCustomers(updatedCustomers);
-          }
+          const response = await customersService.getAll();
+          const customerList = Array.isArray(response) ? response : response.customers || [];
+          setCustomers(customerList);
         } catch (error) {
           console.error('Error loading customers:', error);
-          // Fallback to localStorage if Firebase fails
-          const savedCustomers = localStorage.getItem('companyCustomers');
-          if (savedCustomers) {
-            setCustomers(JSON.parse(savedCustomers));
-          }
+          setCustomers([]);
         }
       };
       
       loadCustomers();
-      
-      // Set up real-time listener for customers
-      const unsubscribe = customersService.onSnapshot((customers) => {
-        setCustomers(customers);
-      });
-      
-      return () => unsubscribe();
     }
   }, [isAuthenticated]);
+
 
   // Customer Database functions
   const handleAddCustomer = async (e) => {
     e.preventDefault();
+    console.log('Attempting to create customer with data:', customerForm);
+    
     try {
-      const newCustomer = {
-        ...customerForm,
-        dateAdded: new Date().toLocaleDateString()
+      // Convert frontend form data to backend expected format
+      const customerData = {
+        firstName: customerForm.contactName.split(' ')[0] || customerForm.contactName,
+        lastName: customerForm.contactName.split(' ').slice(1).join(' ') || 'Customer',
+        email: customerForm.email,
+        phone: customerForm.phone,
+        company: customerForm.companyName,
+        address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim()
       };
-      await customersService.add(newCustomer);
+      
+      console.log('Sending customer data to backend:', customerData);
+      
+      const result = await customersService.create(customerData);
+      console.log('Customer created successfully:', result);
+      
       setCustomerForm({
         companyName: '',
         contactName: '',
@@ -261,9 +89,29 @@ const CRM = () => {
         notes: ''
       });
       setShowCustomerForm(false);
+      
+      // Reload customers
+      const response = await customersService.getAll();
+      const customerList = Array.isArray(response) ? response : response.customers || [];
+      setCustomers(customerList);
+      
+      alert('Customer added successfully!');
     } catch (error) {
-      console.error('Error adding customer:', error);
-      alert('Failed to add customer. Please try again.');
+      console.error('Detailed error adding customer:', error);
+      console.error('Error message:', error.message);
+      
+      let errorMessage = 'Failed to add customer. ';
+      if (error.message.includes('Authentication required')) {
+        errorMessage += 'Please log in again.';
+        window.location.href = '/login';
+      } else if (error.message.includes('Session expired')) {
+        errorMessage += 'Your session has expired. Please log in again.';
+        window.location.href = '/login';
+      } else {
+        errorMessage += `Error: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
@@ -330,69 +178,65 @@ const CRM = () => {
     margin: '0 0.5rem'
   };
 
-  // If not authenticated, show login form
+  // If loading, show loading state
+  if (loading) {
+    return (
+      <div className="page-content" style={{ 
+        padding: '2rem', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '50vh' 
+      }}>
+        <div style={{ textAlign: 'center', color: '#666' }}>
+          <h2>Loading CRM...</h2>
+          <p>Please wait while we load your customer data.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If not authenticated, show message to login
   if (!isAuthenticated) {
     return (
       <div className="page-content" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
         <div style={{ background: '#f8f9fa', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', textAlign: 'center' }}>
-          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>CRM Access</h1>
-          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>Please login to access the customer relationship management system.</p>
+          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>🔒 CRM Access Required</h1>
+          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>
+            Please log in to access the secure customer relationship management system.
+          </p>
           
-          <form onSubmit={handleLogin} style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <input
-              type="text"
-              placeholder="Username"
-              value={loginData.username}
-              onChange={(e) => setLoginData({...loginData, username: e.target.value})}
-              required
-              style={{ 
-                width: '100%', 
-                padding: '0.75rem', 
-                margin: '0.5rem 0', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc',
-                fontSize: '1rem'
-              }}
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              value={loginData.password}
-              onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-              required
-              style={{ 
-                width: '100%', 
-                padding: '0.75rem', 
-                margin: '0.5rem 0', 
-                borderRadius: '4px', 
-                border: '1px solid #ccc',
-                fontSize: '1rem'
-              }}
-            />
-            {loginError && (
-              <div style={{ color: '#dc3545', margin: '0.5rem 0', fontSize: '0.9rem' }}>
-                {loginError}
-              </div>
-            )}
-            <button 
-              type="submit" 
-              style={{
-                ...buttonStyle,
-                width: '100%',
-                padding: '0.75rem',
-                fontSize: '1rem',
-                marginTop: '1rem'
-              }}
-            >
-              Login to CRM
-            </button>
-          </form>
-          
-          <div style={{ marginTop: '2rem', padding: '1rem', background: '#e3f2fd', borderRadius: '4px', fontSize: '0.9rem', color: '#1976d2' }}>
-            <strong>Demo Credentials:</strong><br/>
-            Username: admin<br/>
-            Password: calendar2025
+          <div style={{
+            background: '#e8f5e8',
+            border: '1px solid #4caf50',
+            borderRadius: '8px',
+            padding: '20px',
+            marginBottom: '20px'
+          }}>
+            <p style={{ 
+              margin: 0, 
+              color: '#2e7d32',
+              fontSize: '14px'
+            }}>
+              🔐 <strong>Secure Access:</strong> This CRM contains sensitive customer information and requires authentication.
+            </p>
           </div>
+
+          <a 
+            href="/login" 
+            style={{
+              background: '#22314a',
+              color: 'white',
+              padding: '12px 24px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '16px',
+              fontWeight: '500',
+              display: 'inline-block'
+            }}
+          >
+            Go to Login Page
+          </a>
         </div>
       </div>
     );
@@ -402,7 +246,14 @@ const CRM = () => {
     <div className="page-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <h1 style={{ color: '#22314a', margin: 0 }}>Customer Relationship Management</h1>
-        <button onClick={handleLogout} style={{...buttonStyle, background: '#dc3545'}}>
+        <button 
+          onClick={() => {
+            authService.logout();
+            setIsAuthenticated(false);
+            window.location.href = '/';
+          }} 
+          style={{...buttonStyle, background: '#dc3545'}}
+        >
           Logout
         </button>
       </div>
