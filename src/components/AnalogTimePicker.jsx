@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 
 const AnalogTimePicker = ({ value, onChange, label }) => {
-  const [isDragging, setIsDragging] = useState(null); // 'hour' or 'minute'
+  const [mode, setMode] = useState('hour'); // 'hour' or 'minute'
   const clockRef = useRef(null);
   
   // Parse time value (HH:MM format)
@@ -20,14 +20,9 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
   const hourAngle = (displayHours % 12) * 30 + (minutes * 0.5) - 90; // 30 degrees per hour + minute adjustment
   const minuteAngle = minutes * 6 - 90; // 6 degrees per minute
   
-  // Handle mouse/touch events
-  const handlePointerDown = (e, hand) => {
-    e.preventDefault();
-    setIsDragging(hand);
-  };
-  
-  const handlePointerMove = (e) => {
-    if (!isDragging || !clockRef.current) return;
+  // Handle clock face clicks
+  const handleClockClick = (e) => {
+    if (!clockRef.current) return;
     
     const rect = clockRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
@@ -41,37 +36,18 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
     const angle = Math.atan2(clientY - centerY, clientX - centerX);
     const degrees = (angle * 180 / Math.PI + 90 + 360) % 360;
     
-    if (isDragging === 'hour') {
+    if (mode === 'hour') {
       const newHour = Math.round(degrees / 30) % 12;
       const finalHour = newHour === 0 ? 12 : newHour;
       const time24h = hours >= 12 ? (finalHour === 12 ? 12 : finalHour + 12) : finalHour;
       onChange(`${time24h.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
-    } else if (isDragging === 'minute') {
+      // Auto-switch to minute mode after setting hour
+      setMode('minute');
+    } else if (mode === 'minute') {
       const newMinute = Math.round(degrees / 6) % 60;
       onChange(`${hours.toString().padStart(2, '0')}:${newMinute.toString().padStart(2, '0')}`);
     }
   };
-  
-  const handlePointerUp = () => {
-    setIsDragging(null);
-  };
-  
-  // Add global event listeners
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handlePointerMove);
-      document.addEventListener('mouseup', handlePointerUp);
-      document.addEventListener('touchmove', handlePointerMove);
-      document.addEventListener('touchend', handlePointerUp);
-      
-      return () => {
-        document.removeEventListener('mousemove', handlePointerMove);
-        document.removeEventListener('mouseup', handlePointerUp);
-        document.removeEventListener('touchmove', handlePointerMove);
-        document.removeEventListener('touchend', handlePointerUp);
-      };
-    }
-  }, [isDragging, hours, minutes]);
   
   // Generate hour markers
   const hourMarkers = [];
@@ -124,11 +100,12 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
             width="200"
             height="200"
             viewBox="0 0 100 100"
+            onClick={handleClockClick}
             style={{
-              border: '3px solid #22314a',
+              border: `3px solid ${mode === 'hour' ? '#22314a' : '#dc3545'}`,
               borderRadius: '50%',
-              background: 'white',
-              cursor: isDragging ? 'grabbing' : 'grab',
+              background: mode === 'hour' ? '#f8f9ff' : '#fff8f8',
+              cursor: 'pointer',
               userSelect: 'none'
             }}
           >
@@ -147,12 +124,10 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
               y1="50"
               x2={50 + 25 * Math.cos(hourAngle * Math.PI / 180)}
               y2={50 + 25 * Math.sin(hourAngle * Math.PI / 180)}
-              stroke="#22314a"
-              strokeWidth="4"
+              stroke={mode === 'hour' ? '#22314a' : '#aaa'}
+              strokeWidth={mode === 'hour' ? '5' : '3'}
               strokeLinecap="round"
-              style={{ cursor: 'pointer' }}
-              onMouseDown={(e) => handlePointerDown(e, 'hour')}
-              onTouchStart={(e) => handlePointerDown(e, 'hour')}
+              pointerEvents="none"
             />
             
             {/* Minute hand */}
@@ -161,35 +136,29 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
               y1="50"
               x2={50 + 35 * Math.cos(minuteAngle * Math.PI / 180)}
               y2={50 + 35 * Math.sin(minuteAngle * Math.PI / 180)}
-              stroke="#dc3545"
-              strokeWidth="3"
+              stroke={mode === 'minute' ? '#dc3545' : '#aaa'}
+              strokeWidth={mode === 'minute' ? '4' : '2'}
               strokeLinecap="round"
-              style={{ cursor: 'pointer' }}
-              onMouseDown={(e) => handlePointerDown(e, 'minute')}
-              onTouchStart={(e) => handlePointerDown(e, 'minute')}
+              pointerEvents="none"
             />
             
             {/* Center dot */}
-            <circle cx="50" cy="50" r="3" fill="#22314a" />
+            <circle cx="50" cy="50" r="3" fill="#22314a" pointerEvents="none" />
             
             {/* Hand indicators */}
             <circle
               cx={50 + 25 * Math.cos(hourAngle * Math.PI / 180)}
               cy={50 + 25 * Math.sin(hourAngle * Math.PI / 180)}
               r="4"
-              fill="#22314a"
-              style={{ cursor: 'pointer' }}
-              onMouseDown={(e) => handlePointerDown(e, 'hour')}
-              onTouchStart={(e) => handlePointerDown(e, 'hour')}
+              fill={mode === 'hour' ? '#22314a' : '#aaa'}
+              pointerEvents="none"
             />
             <circle
               cx={50 + 35 * Math.cos(minuteAngle * Math.PI / 180)}
               cy={50 + 35 * Math.sin(minuteAngle * Math.PI / 180)}
               r="3"
-              fill="#dc3545"
-              style={{ cursor: 'pointer' }}
-              onMouseDown={(e) => handlePointerDown(e, 'minute')}
-              onTouchStart={(e) => handlePointerDown(e, 'minute')}
+              fill={mode === 'minute' ? '#dc3545' : '#aaa'}
+              pointerEvents="none"
             />
           </svg>
         </div>
@@ -255,11 +224,48 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
             </button>
           </div>
           
+          {/* Mode Toggle */}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              type="button"
+              onClick={() => setMode('hour')}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '2px solid #22314a',
+                borderRadius: '4px',
+                background: mode === 'hour' ? '#22314a' : 'white',
+                color: mode === 'hour' ? 'white' : '#22314a',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}
+            >
+              Hours
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('minute')}
+              style={{
+                padding: '0.5rem 1rem',
+                border: '2px solid #dc3545',
+                borderRadius: '4px',
+                background: mode === 'minute' ? '#dc3545' : 'white',
+                color: mode === 'minute' ? 'white' : '#dc3545',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 'bold'
+              }}
+            >
+              Minutes
+            </button>
+          </div>
+          
           {/* Instructions */}
-          <div style={{ fontSize: '12px', color: '#666', maxWidth: '150px', lineHeight: '1.4' }}>
-            <div><strong>Blue hand:</strong> Hours</div>
-            <div><strong>Red hand:</strong> Minutes</div>
-            <div>Drag hands to set time</div>
+          <div style={{ fontSize: '12px', color: '#666', maxWidth: '150px', lineHeight: '1.4', textAlign: 'center' }}>
+            <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: mode === 'hour' ? '#22314a' : '#dc3545' }}>
+              {mode === 'hour' ? 'Setting Hours' : 'Setting Minutes'}
+            </div>
+            <div>Click anywhere on the clock face to set the {mode === 'hour' ? 'hour' : 'minute'}</div>
           </div>
         </div>
       </div>
