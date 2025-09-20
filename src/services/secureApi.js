@@ -5,8 +5,8 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://precision-cabling-backend.onrender.com/api'
   : 'http://localhost:3001/api';
 
-// Demo mode flag - set to false to use real backend API
-const DEMO_MODE = false;
+// Demo mode flag - temporarily enabled for testing while backend is being set up
+const DEMO_MODE = true;
 
 class SecureApiService {
   constructor() {
@@ -146,10 +146,64 @@ class SecureApiService {
 
   // Calendar/Appointment Methods
   async getAppointments() {
+    if (DEMO_MODE) {
+      // Demo mode - get appointments from localStorage
+      const appointments = JSON.parse(localStorage.getItem('demo_appointments') || '[]');
+      
+      // Add some default demo appointments if none exist
+      if (appointments.length === 0) {
+        const defaultAppointments = [
+          {
+            id: 1,
+            title: 'Client Site Survey',
+            description: 'Initial site assessment for network infrastructure',
+            appointmentDate: '2025-01-20T10:00:00.000Z',
+            durationMinutes: 120,
+            status: 'scheduled',
+            createdAt: '2025-01-15T10:00:00.000Z'
+          },
+          {
+            id: 2,
+            title: 'Network Infrastructure Install',
+            description: 'Complete network setup and configuration',
+            appointmentDate: '2025-01-25T09:00:00.000Z',
+            durationMinutes: 480,
+            status: 'scheduled',
+            createdAt: '2025-01-15T14:30:00.000Z'
+          }
+        ];
+        localStorage.setItem('demo_appointments', JSON.stringify(defaultAppointments));
+        return { appointments: defaultAppointments };
+      }
+      
+      return { appointments };
+    }
+    
     return await this.secureRequest('/appointments');
   }
 
   async createAppointment(appointmentData) {
+    if (DEMO_MODE) {
+      // Demo mode - simulate appointment creation with localStorage
+      const appointments = JSON.parse(localStorage.getItem('demo_appointments') || '[]');
+      const newAppointment = {
+        id: Date.now(),
+        ...appointmentData,
+        status: 'scheduled',
+        createdAt: new Date().toISOString()
+      };
+      appointments.push(newAppointment);
+      localStorage.setItem('demo_appointments', JSON.stringify(appointments));
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return {
+        message: 'Appointment created successfully (Demo Mode)',
+        appointment: newAppointment
+      };
+    }
+    
     return await this.secureRequest('/appointments', {
       method: 'POST',
       body: JSON.stringify(appointmentData),

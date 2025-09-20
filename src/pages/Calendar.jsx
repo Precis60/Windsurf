@@ -103,17 +103,40 @@ const Calendar = () => {
       console.error('Detailed error adding appointment:', error);
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
+      console.error('Full error object:', JSON.stringify(error, null, 2));
       
       let errorMessage = 'Failed to add appointment. ';
+      
+      // Check for specific error types
       if (error.message.includes('Authentication required')) {
         errorMessage += 'Please log in again.';
         window.location.href = '/login';
+        return;
       } else if (error.message.includes('Session expired')) {
         errorMessage += 'Your session has expired. Please log in again.';
         window.location.href = '/login';
+        return;
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        errorMessage += 'Network error - backend server may not be running. Please check if the backend is started.';
+      } else if (error.message.includes('Validation failed')) {
+        errorMessage += 'Please check all required fields are filled correctly.';
+      } else if (error.message.includes('Customer not found')) {
+        errorMessage += 'The selected customer was not found.';
+      } else if (error.message.includes('Time slot conflicts')) {
+        errorMessage += 'This time slot conflicts with an existing appointment.';
       } else {
         errorMessage += `Error: ${error.message}`;
       }
+      
+      // Show detailed error in console for debugging
+      console.log('=== APPOINTMENT CREATION ERROR DEBUG ===');
+      console.log('Appointment data being sent:', appointmentData);
+      console.log('Error type:', typeof error);
+      console.log('Error constructor:', error.constructor.name);
+      console.log('Is network error:', error.message.includes('Failed to fetch'));
+      console.log('Current auth status:', authService.isAuthenticated());
+      console.log('Backend URL:', process.env.NODE_ENV === 'production' ? 'https://precision-cabling-backend.onrender.com/api' : 'http://localhost:3001/api');
+      console.log('=====================================');
       
       alert(errorMessage);
     }
