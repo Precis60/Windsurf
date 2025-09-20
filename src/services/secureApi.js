@@ -5,8 +5,8 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://precision-cabling-backend.onrender.com/api'
   : 'http://localhost:3001/api';
 
-// Demo mode flag - temporarily enabled for testing while backend is being set up
-const DEMO_MODE = true;
+// Demo mode flag - set to false to use real backend API
+const DEMO_MODE = false;
 
 class SecureApiService {
   constructor() {
