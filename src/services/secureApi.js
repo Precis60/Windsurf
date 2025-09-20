@@ -6,7 +6,7 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   : 'http://localhost:3001/api';
 
 // Demo mode flag - set to false to use real backend API
-const DEMO_MODE = false;
+const DEMO_MODE = true;
 
 class SecureApiService {
   constructor() {
@@ -92,7 +92,7 @@ class SecureApiService {
       this.token = data.token;
       this.user = data.user;
       localStorage.setItem('authToken', this.token);
-      localStorage.setItem('user', JSON.stringify(this.user));
+      localStorage.setItem('authUser', JSON.stringify(this.user));
 
       return data;
     } catch (error) {
@@ -105,7 +105,7 @@ class SecureApiService {
     this.token = null;
     this.user = null;
     localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem('authUser');
   }
 
   // Secure API Request Method
@@ -291,6 +291,34 @@ class SecureApiService {
   }
 
   async updateCustomer(id, customerData) {
+    if (DEMO_MODE) {
+      // Demo mode - simulate customer update with localStorage
+      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
+      const customerIndex = customers.findIndex(customer => customer.id === id);
+      
+      if (customerIndex === -1) {
+        throw new Error('Customer not found');
+      }
+      
+      // Update the customer while preserving id and createdAt
+      customers[customerIndex] = {
+        ...customers[customerIndex],
+        ...customerData,
+        id: id, // Preserve original ID
+        updatedAt: new Date().toISOString()
+      };
+      
+      localStorage.setItem('demo_customers', JSON.stringify(customers));
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return {
+        message: 'Customer updated successfully (Demo Mode)',
+        customer: customers[customerIndex]
+      };
+    }
+    
     return await this.secureRequest(`/customers/${id}`, {
       method: 'PUT',
       body: JSON.stringify(customerData),
@@ -298,6 +326,27 @@ class SecureApiService {
   }
 
   async deleteCustomer(id) {
+    if (DEMO_MODE) {
+      // Demo mode - simulate customer deletion with localStorage
+      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
+      const customerIndex = customers.findIndex(customer => customer.id === id);
+      
+      if (customerIndex === -1) {
+        throw new Error('Customer not found');
+      }
+      
+      // Remove the customer
+      customers.splice(customerIndex, 1);
+      localStorage.setItem('demo_customers', JSON.stringify(customers));
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      return {
+        message: 'Customer deleted successfully (Demo Mode)'
+      };
+    }
+    
     return await this.secureRequest(`/customers/${id}`, {
       method: 'DELETE',
     });
@@ -337,7 +386,7 @@ class SecureApiService {
   // Utility Methods
   getStoredUser() {
     try {
-      const userData = localStorage.getItem('user');
+      const userData = localStorage.getItem('authUser');
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
       console.error('Error parsing stored user data:', error);

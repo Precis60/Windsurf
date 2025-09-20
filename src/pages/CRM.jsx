@@ -57,7 +57,11 @@ const CRM = () => {
   // Customer Database functions
   const handleAddCustomer = async (e) => {
     e.preventDefault();
-    console.log('Attempting to create customer with data:', customerForm);
+    console.log('=== HANDLE ADD CUSTOMER CALLED ===');
+    console.log('Event:', e);
+    console.log('Form data:', customerForm);
+    console.log('Authentication status:', authService.isAuthenticated());
+    console.log('Current user:', authService.getCurrentUser());
     
     // Frontend validation
     if (!customerForm.contactName.trim()) {
@@ -159,8 +163,45 @@ const CRM = () => {
 
   const handleUpdateCustomer = async (e) => {
     e.preventDefault();
+    console.log('Attempting to update customer with data:', customerForm);
+    
+    // Frontend validation
+    if (!customerForm.contactName.trim()) {
+      alert('Please enter a contact name.');
+      return;
+    }
+    
+    if (!customerForm.email.trim()) {
+      alert('Please enter an email address.');
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerForm.email.trim())) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
     try {
-      await customersService.update(editingCustomer, customerForm);
+      // Convert frontend form data to backend expected format
+      const nameParts = customerForm.contactName.trim().split(' ');
+      const firstName = nameParts[0] || 'Customer';
+      const lastName = nameParts.slice(1).join(' ') || 'User';
+      
+      const customerData = {
+        firstName: firstName,
+        lastName: lastName,
+        email: customerForm.email.trim(),
+        phone: customerForm.phone.trim() || null,
+        company: customerForm.companyName.trim() || null,
+        address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
+      };
+      
+      console.log('Sending updated customer data to backend:', customerData);
+      
+      await customersService.update(editingCustomer, customerData);
+      
       setCustomerForm({
         companyName: '',
         contactName: '',
@@ -175,24 +216,61 @@ const CRM = () => {
       });
       setEditingCustomer(null);
       setShowCustomerForm(false);
+      
+      // Reload customers
+      const response = await customersService.getAll();
+      const customerList = Array.isArray(response) ? response : response.customers || [];
+      setCustomers(customerList);
+      
+      alert('Customer updated successfully!');
     } catch (error) {
       console.error('Error updating customer:', error);
-      alert('Failed to update customer. Please try again.');
+      
+      let errorMessage = 'Failed to update customer. ';
+      
+      if (error.message.includes('Authentication required')) {
+        errorMessage += 'Please log in again.';
+        window.location.href = '/login';
+        return;
+      } else if (error.message.includes('Session expired')) {
+        errorMessage += 'Your session has expired. Please log in again.';
+        window.location.href = '/login';
+        return;
+      } else {
+        errorMessage += `Error: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     }
   };
 
   const handleEditCustomer = (customer) => {
+    console.log('Editing customer:', customer);
+    
+    // Parse address if it exists
+    let address = '', city = '', state = '', zipCode = '';
+    if (customer.address) {
+      const addressParts = customer.address.split(', ');
+      if (addressParts.length >= 1) address = addressParts[0] || '';
+      if (addressParts.length >= 2) city = addressParts[1] || '';
+      if (addressParts.length >= 3) {
+        const stateZip = addressParts[2].split(' ');
+        state = stateZip[0] || '';
+        zipCode = stateZip[1] || '';
+      }
+    }
+    
     setCustomerForm({
-      companyName: customer.companyName,
-      contactName: customer.contactName,
-      email: customer.email,
-      phone: customer.phone,
-      address: customer.address,
-      city: customer.city,
-      state: customer.state,
-      zipCode: customer.zipCode,
-      projectType: customer.projectType,
-      notes: customer.notes
+      companyName: customer.company || '',
+      contactName: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
+      email: customer.email || '',
+      phone: customer.phone || '',
+      address: address,
+      city: city,
+      state: state,
+      zipCode: zipCode,
+      projectType: customer.projectType || '',
+      notes: customer.notes || ''
     });
     setEditingCustomer(customer.id);
     setShowCustomerForm(true);
@@ -202,9 +280,31 @@ const CRM = () => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
         await customersService.delete(id);
+        
+        // Reload customers after deletion
+        const response = await customersService.getAll();
+        const customerList = Array.isArray(response) ? response : response.customers || [];
+        setCustomers(customerList);
+        
+        alert('Customer deleted successfully!');
       } catch (error) {
         console.error('Error deleting customer:', error);
-        alert('Failed to delete customer. Please try again.');
+        
+        let errorMessage = 'Failed to delete customer. ';
+        
+        if (error.message.includes('Authentication required')) {
+          errorMessage += 'Please log in again.';
+          window.location.href = '/login';
+          return;
+        } else if (error.message.includes('Session expired')) {
+          errorMessage += 'Your session has expired. Please log in again.';
+          window.location.href = '/login';
+          return;
+        } else {
+          errorMessage += `Error: ${error.message}`;
+        }
+        
+        alert(errorMessage);
       }
     }
   };
@@ -385,14 +485,13 @@ const CRM = () => {
             <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>
               {editingCustomer ? 'Edit Customer' : 'Add New Customer'}
             </h3>
-            <form onSubmit={editingCustomer ? handleUpdateCustomer : handleAddCustomer}>
+            <form onSubmit={editingCustomer ? handleUpdateCustomer : handleAddCustomer} noValidate>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                 <input
                   type="text"
                   placeholder="Company Name"
                   value={customerForm.companyName}
                   onChange={(e) => setCustomerForm({...customerForm, companyName: e.target.value})}
-                  required
                   style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
                 <input
@@ -416,7 +515,6 @@ const CRM = () => {
                   placeholder="Phone Number"
                   value={customerForm.phone}
                   onChange={(e) => setCustomerForm({...customerForm, phone: e.target.value})}
-                  required
                   style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
                 />
                 <input
@@ -450,7 +548,6 @@ const CRM = () => {
                 <select
                   value={customerForm.projectType}
                   onChange={(e) => setCustomerForm({...customerForm, projectType: e.target.value})}
-                  required
                   style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
                 >
                   <option value="">Select Project Type</option>
@@ -470,9 +567,47 @@ const CRM = () => {
                 onChange={(e) => setCustomerForm({...customerForm, notes: e.target.value})}
                 style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px', marginBottom: '1rem' }}
               />
-              <button type="submit" style={buttonStyle}>
-                {editingCustomer ? 'Update Customer' : 'Save Customer'}
-              </button>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                <button 
+                  type="submit" 
+                  style={{
+                    ...buttonStyle,
+                    background: editingCustomer ? '#28a745' : '#007bff'
+                  }}
+                  onClick={(e) => {
+                    console.log('Form submit button clicked');
+                    console.log('Current form data:', customerForm);
+                    console.log('Editing customer ID:', editingCustomer);
+                  }}
+                >
+                  {editingCustomer ? 'Update Customer' : 'Save Customer'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setShowCustomerForm(false);
+                    setEditingCustomer(null);
+                    setCustomerForm({
+                      companyName: '',
+                      contactName: '',
+                      email: '',
+                      phone: '',
+                      address: '',
+                      city: '',
+                      state: '',
+                      zipCode: '',
+                      projectType: '',
+                      notes: ''
+                    });
+                  }}
+                  style={{
+                    ...buttonStyle,
+                    background: '#6c757d'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           </div>
         )}
