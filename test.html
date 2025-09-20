@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Test Page - Precision Cabling</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #22314a;
+            text-align: center;
+        }
+        .status {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #1565c0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 GitHub Pages Test - SUCCESS!</h1>
+        
+        <div class="status">
+            ✅ <strong>GitHub Pages is working!</strong><br>
+            If you can see this page, your GitHub Pages deployment is functioning correctly.
+        </div>
+        
+        <div class="info">
+            <strong>Test Information:</strong><br>
+            📍 <strong>Current URL:</strong> <span id="current-url"></span><br>
+            📍 <strong>Base Path:</strong> /Windsurf/<br>
+            📍 <strong>Expected Main Site:</strong> <a href="/Windsurf/">https://precis60.github.io/Windsurf/</a>
+        </div>
+        
+        <h2>Next Steps:</h2>
+        <ol>
+            <li>If you can see this test page, the deployment is working</li>
+            <li>Try visiting the main site: <a href="/Windsurf/">Main Application</a></li>
+            <li>If the main site is blank, check browser console for errors (F12)</li>
+            <li>The issue might be with React/JavaScript loading, not the deployment</li>
+        </ol>
+        
+        <h2>Troubleshooting:</h2>
+        <ul>
+            <li><strong>Blank page:</strong> Check browser console for JavaScript errors</li>
+            <li><strong>404 errors:</strong> Assets might not be loading from correct path</li>
+            <li><strong>Network errors:</strong> Check if CSS/JS files are loading properly</li>
+        </ul>
+        
+        <div class="info">
+            <strong>Repository:</strong> <a href="https://github.com/Precis60/Windsurf" target="_blank">Precis60/Windsurf</a><br>
+            <strong>GitHub Actions:</strong> <a href="https://github.com/Precis60/Windsurf/actions" target="_blank">View Deployment Status</a>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+    </script>
+</body>
+</html>
