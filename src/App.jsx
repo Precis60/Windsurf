@@ -20,6 +20,7 @@ const SupportPortal = lazy(() => import("./pages/SupportPortal"));
 const Portal = lazy(() => import("./pages/Portal"));
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const SupportRequest = lazy(() => import("./pages/SupportRequest"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
@@ -86,6 +87,9 @@ function App() {
             
             {/* Authentication route */}
             <Route path="/login" element={<Login onLogin={handleLogin} />} />
+            
+            {/* Public support request route */}
+            <Route path="/support-request" element={<SupportRequest />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
