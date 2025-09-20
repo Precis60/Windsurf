@@ -1,1 +1,0 @@
-import{j as o}from"./index-4rICCF5Y.js";import"./vendor-DR4o8xae.js";const i=()=>o.jsxs("div",{className:"page-content",children:[o.jsx("h1",{children:"Company Policies"}),o.jsx("p",{children:"Read about our company policies and commitment to quality and safety."})]});export{i as default};
