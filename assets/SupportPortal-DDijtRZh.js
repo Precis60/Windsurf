@@ -1,1 +1,0 @@
-import{j as r}from"./index-DaG32P-Y.js";import"./vendor-DR4o8xae.js";const s=()=>r.jsxs("div",{className:"page-content",children:[r.jsx("h1",{children:"Support Portal"}),r.jsx("p",{children:"Submit and track support requests for your projects."})]});export{s as default};
