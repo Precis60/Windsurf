@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { authService } from '../services/secureApi';
+import { authService, appointmentsService, customersService, projectsService, supportService } from '../services/secureApi';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -10,20 +10,77 @@ const Dashboard = () => {
     projects: 0,
     tickets: 0
   });
+  const [recentData, setRecentData] = useState({
+    appointments: [],
+    customers: [],
+    projects: [],
+    tickets: []
+  });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const currentUser = authService.getCurrentUser();
     setUser(currentUser);
-    
-    // In a real app, you'd fetch these stats from your API
-    // For now, showing placeholder data
-    setStats({
-      appointments: 12,
-      customers: 45,
-      projects: 8,
-      tickets: 3
-    });
+    loadDashboardData();
   }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch data from all services
+      const [appointments, customers, projects, tickets] = await Promise.allSettled([
+        appointmentsService.getAll(),
+        customersService.getAll(),
+        projectsService.getAll(),
+        supportService.getTickets()
+      ]);
+
+      // Process appointments
+      const appointmentData = appointments.status === 'fulfilled' ? appointments.value : [];
+      const appointmentList = Array.isArray(appointmentData) ? appointmentData : appointmentData.appointments || [];
+
+      // Process customers
+      const customerData = customers.status === 'fulfilled' ? customers.value : [];
+      const customerList = Array.isArray(customerData) ? customerData : customerData.customers || [];
+
+      // Process projects
+      const projectData = projects.status === 'fulfilled' ? projects.value : [];
+      const projectList = Array.isArray(projectData) ? projectData : projectData.projects || [];
+
+      // Process tickets
+      const ticketData = tickets.status === 'fulfilled' ? tickets.value : [];
+      const ticketList = Array.isArray(ticketData) ? ticketData : ticketData.tickets || [];
+
+      // Update stats
+      setStats({
+        appointments: appointmentList.length,
+        customers: customerList.length,
+        projects: projectList.length,
+        tickets: ticketList.filter(ticket => ticket.status === 'open' || ticket.status === 'in_progress').length
+      });
+
+      // Update recent data (last 5 items)
+      setRecentData({
+        appointments: appointmentList.slice(0, 3),
+        customers: customerList.slice(0, 3),
+        projects: projectList.slice(0, 3),
+        tickets: ticketList.slice(0, 3)
+      });
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      // Keep placeholder data if API calls fail
+      setStats({
+        appointments: 0,
+        customers: 0,
+        projects: 0,
+        tickets: 0
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const quickActions = [
     {
@@ -56,12 +113,59 @@ const Dashboard = () => {
     }
   ];
 
-  const recentActivity = [
-    { type: 'appointment', message: 'New appointment scheduled for tomorrow', time: '2 hours ago' },
-    { type: 'customer', message: 'Customer John Smith updated profile', time: '4 hours ago' },
-    { type: 'project', message: 'Office Network Installation project started', time: '1 day ago' },
-    { type: 'ticket', message: 'Support ticket #123 resolved', time: '2 days ago' }
-  ];
+  // Generate recent activity from real data
+  const generateRecentActivity = () => {
+    const activities = [];
+    
+    // Add recent appointments
+    recentData.appointments.forEach(appointment => {
+      activities.push({
+        type: 'appointment',
+        message: `Appointment: ${appointment.title || 'New appointment scheduled'}`,
+        time: appointment.created_at ? new Date(appointment.created_at).toLocaleDateString() : 'Recently',
+        icon: '📅',
+        color: '#667eea'
+      });
+    });
+
+    // Add recent customers
+    recentData.customers.forEach(customer => {
+      activities.push({
+        type: 'customer',
+        message: `New customer: ${customer.first_name} ${customer.last_name}`,
+        time: customer.created_at ? new Date(customer.created_at).toLocaleDateString() : 'Recently',
+        icon: '👥',
+        color: '#48bb78'
+      });
+    });
+
+    // Add recent projects
+    recentData.projects.forEach(project => {
+      activities.push({
+        type: 'project',
+        message: `Project: ${project.name || 'New project created'}`,
+        time: project.created_at ? new Date(project.created_at).toLocaleDateString() : 'Recently',
+        icon: '🔧',
+        color: '#ed8936'
+      });
+    });
+
+    // Add recent tickets
+    recentData.tickets.forEach(ticket => {
+      activities.push({
+        type: 'ticket',
+        message: `Support: ${ticket.subject || 'New support ticket'}`,
+        time: ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : 'Recently',
+        icon: '🎧',
+        color: '#9f7aea'
+      });
+    });
+
+    // Sort by most recent and limit to 6 items
+    return activities.slice(0, 6);
+  };
+
+  const recentActivity = generateRecentActivity();
 
   return (
     <div style={{ 
@@ -98,77 +202,161 @@ const Dashboard = () => {
       {/* Stats Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '20px',
         marginBottom: '30px'
       }}>
-        <div style={{
-          background: 'white',
-          padding: '25px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          border: '1px solid #e1e5e9'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <span style={{ fontSize: '24px', marginRight: '12px' }}>📅</span>
-            <h3 style={{ margin: 0, color: '#22314a' }}>Appointments</h3>
+        {/* Appointments Card */}
+        <Link to="/calendar" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{
+            background: 'white',
+            padding: '25px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            border: '1px solid #e1e5e9',
+            cursor: 'pointer',
+            transition: 'transform 0.2s, box-shadow 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '24px', marginRight: '12px' }}>📅</span>
+                <h3 style={{ margin: 0, color: '#22314a' }}>Appointments</h3>
+              </div>
+              <span style={{ fontSize: '12px', color: '#667eea', fontWeight: '500' }}>MANAGE →</span>
+            </div>
+            <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#667eea' }}>
+              {loading ? '...' : stats.appointments}
+            </p>
+            <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>Total scheduled</p>
+            {recentData.appointments.length > 0 && (
+              <div style={{ fontSize: '12px', color: '#999' }}>
+                Latest: {recentData.appointments[0].title || 'Recent appointment'}
+              </div>
+            )}
           </div>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#667eea' }}>
-            {stats.appointments}
-          </p>
-          <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>This month</p>
-        </div>
+        </Link>
 
-        <div style={{
-          background: 'white',
-          padding: '25px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          border: '1px solid #e1e5e9'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <span style={{ fontSize: '24px', marginRight: '12px' }}>👥</span>
-            <h3 style={{ margin: 0, color: '#22314a' }}>Customers</h3>
+        {/* Customers Card */}
+        <Link to="/crm" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{
+            background: 'white',
+            padding: '25px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            border: '1px solid #e1e5e9',
+            cursor: 'pointer',
+            transition: 'transform 0.2s, box-shadow 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '24px', marginRight: '12px' }}>👥</span>
+                <h3 style={{ margin: 0, color: '#22314a' }}>Customers</h3>
+              </div>
+              <span style={{ fontSize: '12px', color: '#48bb78', fontWeight: '500' }}>MANAGE →</span>
+            </div>
+            <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#48bb78' }}>
+              {loading ? '...' : stats.customers}
+            </p>
+            <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>Total customers</p>
+            {recentData.customers.length > 0 && (
+              <div style={{ fontSize: '12px', color: '#999' }}>
+                Latest: {recentData.customers[0].first_name || 'Recent customer'}
+              </div>
+            )}
           </div>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#48bb78' }}>
-            {stats.customers}
-          </p>
-          <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Total active</p>
-        </div>
+        </Link>
 
-        <div style={{
-          background: 'white',
-          padding: '25px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          border: '1px solid #e1e5e9'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <span style={{ fontSize: '24px', marginRight: '12px' }}>🔧</span>
-            <h3 style={{ margin: 0, color: '#22314a' }}>Projects</h3>
+        {/* Projects Card */}
+        <Link to="/portal" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{
+            background: 'white',
+            padding: '25px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            border: '1px solid #e1e5e9',
+            cursor: 'pointer',
+            transition: 'transform 0.2s, box-shadow 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '24px', marginRight: '12px' }}>🔧</span>
+                <h3 style={{ margin: 0, color: '#22314a' }}>Projects</h3>
+              </div>
+              <span style={{ fontSize: '12px', color: '#ed8936', fontWeight: '500' }}>MANAGE →</span>
+            </div>
+            <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#ed8936' }}>
+              {loading ? '...' : stats.projects}
+            </p>
+            <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>Active projects</p>
+            {recentData.projects.length > 0 && (
+              <div style={{ fontSize: '12px', color: '#999' }}>
+                Latest: {recentData.projects[0].name || 'Recent project'}
+              </div>
+            )}
           </div>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#ed8936' }}>
-            {stats.projects}
-          </p>
-          <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>In progress</p>
-        </div>
+        </Link>
 
-        <div style={{
-          background: 'white',
-          padding: '25px',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          border: '1px solid #e1e5e9'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: '15px' }}>
-            <span style={{ fontSize: '24px', marginRight: '12px' }}>🎧</span>
-            <h3 style={{ margin: 0, color: '#22314a' }}>Support Tickets</h3>
+        {/* Support Tickets Card */}
+        <Link to="/support-portal" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <div style={{
+            background: 'white',
+            padding: '25px',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            border: '1px solid #e1e5e9',
+            cursor: 'pointer',
+            transition: 'transform 0.2s, box-shadow 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 20px rgba(0,0,0,0.15)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '15px' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '24px', marginRight: '12px' }}>🎧</span>
+                <h3 style={{ margin: 0, color: '#22314a' }}>Support Tickets</h3>
+              </div>
+              <span style={{ fontSize: '12px', color: '#9f7aea', fontWeight: '500' }}>MANAGE →</span>
+            </div>
+            <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#9f7aea' }}>
+              {loading ? '...' : stats.tickets}
+            </p>
+            <p style={{ margin: '0 0 10px 0', color: '#666', fontSize: '14px' }}>Open tickets</p>
+            {recentData.tickets.length > 0 && (
+              <div style={{ fontSize: '12px', color: '#999' }}>
+                Latest: {recentData.tickets[0].subject || 'Recent ticket'}
+              </div>
+            )}
           </div>
-          <p style={{ fontSize: '28px', fontWeight: 'bold', margin: '0 0 5px 0', color: '#9f7aea' }}>
-            {stats.tickets}
-          </p>
-          <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>Open tickets</p>
-        </div>
+        </Link>
       </div>
 
       {/* Quick Actions */}
@@ -259,7 +447,7 @@ const Dashboard = () => {
           border: '1px solid #e1e5e9',
           overflow: 'hidden'
         }}>
-          {recentActivity.map((activity, index) => (
+          {recentActivity.length > 0 ? recentActivity.map((activity, index) => (
             <div 
               key={index}
               style={{
@@ -272,12 +460,17 @@ const Dashboard = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <div style={{
-                  width: '8px',
-                  height: '8px',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
-                  background: '#667eea',
+                  background: activity.color + '20',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   marginRight: '15px'
-                }}></div>
+                }}>
+                  <span style={{ fontSize: '14px' }}>{activity.icon}</span>
+                </div>
                 <span style={{ color: '#22314a', fontSize: '14px' }}>
                   {activity.message}
                 </span>
@@ -286,7 +479,20 @@ const Dashboard = () => {
                 {activity.time}
               </span>
             </div>
-          ))}
+          )) : (
+            <div style={{ 
+              padding: '40px', 
+              textAlign: 'center', 
+              color: '#666' 
+            }}>
+              <p style={{ margin: 0, fontSize: '16px' }}>
+                📊 No recent activity yet
+              </p>
+              <p style={{ margin: '10px 0 0 0', fontSize: '14px' }}>
+                Start by creating appointments, adding customers, or managing projects
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
