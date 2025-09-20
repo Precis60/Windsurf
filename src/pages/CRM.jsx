@@ -289,19 +289,6 @@ const CRM = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
         <div>
           <h1 style={{ color: '#22314a', margin: 0 }}>Customer Relationship Management</h1>
-          {process.env.NODE_ENV === 'production' && (
-            <div style={{ 
-              background: '#fff3cd', 
-              color: '#856404', 
-              padding: '0.5rem 1rem', 
-              borderRadius: '4px', 
-              fontSize: '0.9rem',
-              marginTop: '0.5rem',
-              border: '1px solid #ffeaa7'
-            }}>
-              🚀 <strong>Demo Mode:</strong> Data is stored locally for demonstration
-            </div>
-          )}
         </div>
         <button 
           onClick={() => {
