@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { appointmentsService, authService } from '../services/secureApi';
+import { appointmentsService, authService, customersService } from '../services/secureApi';
 
 const Calendar = () => {
   // Authentication state
@@ -9,6 +9,7 @@ const Calendar = () => {
   // Calendar state
   const [currentView, setCurrentView] = useState('monthly');
   const [appointments, setAppointments] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -18,6 +19,7 @@ const Calendar = () => {
     time: '',
     endTime: '',
     client: '',
+    customerId: '',
     description: '',
     category: '',
     address: ''
@@ -43,21 +45,28 @@ const Calendar = () => {
     checkAuth();
   }, []);
 
-  // Load appointments from secure API
+  // Load appointments and customers from secure API
   useEffect(() => {
     if (isAuthenticated) {
-      const loadAppointments = async () => {
+      const loadData = async () => {
         try {
-          const response = await appointmentsService.getAll();
-          const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+          // Load appointments
+          const appointmentsResponse = await appointmentsService.getAll();
+          const appointmentList = Array.isArray(appointmentsResponse) ? appointmentsResponse : appointmentsResponse.appointments || [];
           setAppointments(appointmentList);
+          
+          // Load customers
+          const customersResponse = await customersService.getAll();
+          const customerList = Array.isArray(customersResponse) ? customersResponse : customersResponse.customers || [];
+          setCustomers(customerList);
         } catch (error) {
-          console.error('Error loading appointments:', error);
+          console.error('Error loading data:', error);
           setAppointments([]);
+          setCustomers([]);
         }
       };
       
-      loadAppointments();
+      loadData();
     }
   }, [isAuthenticated]);
 
@@ -72,7 +81,8 @@ const Calendar = () => {
         title: formData.title,
         description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
         appointmentDate: `${formData.date}T${formData.time}:00.000Z`,
-        durationMinutes: calculateDurationMinutes(formData.time, formData.endTime)
+        durationMinutes: calculateDurationMinutes(formData.time, formData.endTime),
+        customerId: formData.customerId || null
       };
       
       console.log('Sending appointment data to backend:', appointmentData);
@@ -80,7 +90,7 @@ const Calendar = () => {
       const result = await appointmentsService.create(appointmentData);
       console.log('Appointment created successfully:', result);
       
-      setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' });
+      setFormData({ title: '', date: '', time: '', endTime: '', client: '', customerId: '', description: '', category: '', address: '' });
       setShowAddForm(false);
       
       // Reload appointments

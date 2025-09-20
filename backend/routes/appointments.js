@@ -132,18 +132,31 @@ router.post('/', authenticateToken, [
     const { title, description, appointmentDate, durationMinutes, customerId } = req.body;
     
     // Determine customer ID
-    const finalCustomerId = req.user.role === 'customer' ? req.user.id : (customerId || req.user.id);
+    let finalCustomerId;
+    
+    if (req.user.role === 'customer') {
+      // If user is a customer, use their ID
+      finalCustomerId = req.user.id;
+    } else if (customerId) {
+      // If admin/staff provided a customerId, use it
+      finalCustomerId = customerId;
+    } else {
+      // For admin/staff without customerId, create appointment without customer link
+      finalCustomerId = null;
+    }
 
-    // Check if customer exists
-    const customerCheck = await query(
-      'SELECT id FROM users WHERE id = $1 AND role = \'customer\'',
-      [finalCustomerId]
-    );
+    // Check if customer exists (only if customerId is provided)
+    if (finalCustomerId) {
+      const customerCheck = await query(
+        'SELECT id FROM users WHERE id = $1 AND role = \'customer\'',
+        [finalCustomerId]
+      );
 
-    if (customerCheck.rows.length === 0) {
-      return res.status(404).json({ 
-        error: { message: 'Customer not found' } 
-      });
+      if (customerCheck.rows.length === 0) {
+        return res.status(404).json({ 
+          error: { message: 'Customer not found' } 
+        });
+      }
     }
 
     // Check for conflicting appointments
