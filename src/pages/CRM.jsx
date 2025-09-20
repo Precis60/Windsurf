@@ -59,15 +59,37 @@ const CRM = () => {
     e.preventDefault();
     console.log('Attempting to create customer with data:', customerForm);
     
+    // Frontend validation
+    if (!customerForm.contactName.trim()) {
+      alert('Please enter a contact name.');
+      return;
+    }
+    
+    if (!customerForm.email.trim()) {
+      alert('Please enter an email address.');
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerForm.email.trim())) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    
     try {
       // Convert frontend form data to backend expected format
+      const nameParts = customerForm.contactName.trim().split(' ');
+      const firstName = nameParts[0] || 'Customer';
+      const lastName = nameParts.slice(1).join(' ') || 'User';
+      
       const customerData = {
-        firstName: customerForm.contactName.split(' ')[0] || customerForm.contactName,
-        lastName: customerForm.contactName.split(' ').slice(1).join(' ') || 'Customer',
-        email: customerForm.email,
-        phone: customerForm.phone,
-        company: customerForm.companyName,
-        address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim()
+        firstName: firstName,
+        lastName: lastName,
+        email: customerForm.email.trim(),
+        phone: customerForm.phone.trim() || null,
+        company: customerForm.companyName.trim() || null,
+        address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
       };
       
       console.log('Sending customer data to backend:', customerData);
@@ -115,7 +137,7 @@ const CRM = () => {
       } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
         errorMessage += 'Network error - backend server may not be running. Please check if the backend is started.';
       } else if (error.message.includes('Validation failed')) {
-        errorMessage += 'Please check all required fields are filled correctly.';
+        errorMessage += 'Please check all required fields are filled correctly. Make sure you have entered both first and last name, and a valid email address.';
       } else if (error.message.includes('already exists')) {
         errorMessage += 'A customer with this email already exists.';
       } else {
