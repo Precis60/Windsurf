@@ -121,6 +121,23 @@
   display: flex;
   gap: 1rem;
   margin-top: 1rem;
+  align-items: center; /* Align buttons vertically */
+}
+
+.calendar-btn-delete {
+  background: #dc3545; /* Red for delete */
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+  margin-left: auto; /* Push delete button to the far right */
+}
+
+.calendar-btn-delete:hover {
+  background: #b52a37; /* Darker red on hover */
 }
 .calendar-feedback {
   margin: 0.5rem 0 1rem 0;

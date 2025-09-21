@@ -480,6 +480,14 @@ const Calendar = () => {
             <div className="calendar-form-actions">
               <button className="calendar-btn-main" type="submit">{editingAppointment ? 'Update Appointment' : 'Add Appointment'}</button>
               <button className="calendar-btn-secondary" type="button" onClick={() => { setShowAddForm(false); setEditingAppointment(null); }}>Cancel</button>
+              {editingAppointment && (
+                <button 
+                  className="calendar-btn-delete" 
+                  type="button" 
+                  onClick={() => handleDeleteAppointment(editingAppointment)}>
+                  Delete
+                </button>
+              )}
             </div>
           </form>
         </div>
