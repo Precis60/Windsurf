@@ -191,3 +191,37 @@ router.post('/logout', authenticateToken, (req, res) => {
 });
 
 export default router;
+
+// Admin password reset (emergency) protected by ADMIN_RESET_TOKEN
+// Usage: send header "x-reset-token: <ADMIN_RESET_TOKEN>" and body { email, newPassword }
+router.post('/admin-reset-password', [
+  body('email').isEmail().normalizeEmail(),
+  body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ error: { message: 'Validation failed', details: errors.array() } });
+    }
+
+    const headerToken = req.headers['x-reset-token'];
+    if (!headerToken || headerToken !== process.env.ADMIN_RESET_TOKEN) {
+      return res.status(403).json({ error: { message: 'Invalid reset token' } });
+    }
+
+    const { email, newPassword } = req.body;
+
+    // Find user by email
+    const result = await query('SELECT id FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: { message: 'User not found' } });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await query('UPDATE users SET password_hash = $1, updated_at = NOW() WHERE email = $2', [hashed, email]);
+    res.json({ message: 'Password updated successfully' });
+  } catch (error) {
+    console.error('Admin reset password error:', error);
+    res.status(500).json({ error: { message: 'Failed to reset password' } });
+  }
+});
