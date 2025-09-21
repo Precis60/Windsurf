@@ -134,11 +134,17 @@ class SecureApiService {
       if (response.status === 401) {
         // Token expired or invalid
         this.logout();
-        throw new Error('Session expired. Please login again.');
+        const err = new Error('Session expired. Please login again.');
+        err.status = 401;
+        err.data = data;
+        throw err;
       }
 
       if (!response.ok) {
-        throw new Error(data.error?.message || 'Request failed');
+        const err = new Error(data.error?.message || 'Request failed');
+        err.status = response.status;
+        err.data = data;
+        throw err;
       }
 
       return data;

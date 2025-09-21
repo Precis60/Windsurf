@@ -16,6 +16,7 @@ const Calendar = () => {
   const [currentView, setCurrentView] = useState('monthly');
   const [appointments, setAppointments] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [notice, setNotice] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -90,25 +91,35 @@ const Calendar = () => {
   useEffect(() => {
     if (isAuthenticated) {
       const loadData = async () => {
+        // Reset notice on each load attempt
+        setNotice(null);
+
+        // Load appointments
         try {
-          // Load appointments
           const appointmentsResponse = await appointmentsService.getAll();
           const appointmentList = Array.isArray(appointmentsResponse) ? appointmentsResponse : appointmentsResponse.appointments || [];
-          console.log('Loaded raw appointments:', appointmentList);
-          
-          // Transform appointments to include time/endTime fields
           const transformedAppointments = appointmentList.map(transformAppointment);
-          console.log('Transformed appointments:', transformedAppointments);
           setAppointments(transformedAppointments);
-          
-          // Load customers (minimal set for calendar)
+        } catch (error) {
+          console.error('Error loading appointments:', error);
+          setAppointments([]);
+          const msg = error?.status === 401 ? 'Your session has expired. Please log in again to view appointments.' : (error?.message || 'Failed to load appointments.');
+          setNotice({ type: 'error', message: msg });
+        }
+
+        // Load customers (minimal set for calendar)
+        try {
           const customersResponse = await calendarService.getCalendarCustomers();
           const customerList = Array.isArray(customersResponse) ? customersResponse : customersResponse.customers || [];
           setCustomers(customerList);
         } catch (error) {
-          console.error('Error loading data:', error);
-          setAppointments([]);
+          console.error('Error loading customers:', error);
           setCustomers([]);
+          if (error?.status === 403) {
+            setNotice({ type: 'error', message: 'You are logged in without admin/staff permissions. Customer list is hidden. Appointments can still be created by typing a client name, but dropdown requires admin/staff.' });
+          } else if (error?.status === 401) {
+            setNotice({ type: 'error', message: 'Your session has expired. Please log in again to load customers.' });
+          }
         }
       };
       
@@ -365,6 +376,11 @@ const Calendar = () => {
         <h1 className="calendar-title">Calendar Management</h1>
         <button className="calendar-logout-btn" onClick={() => { authService.logout(); setIsAuthenticated(false); window.location.href = '/'; }}>Logout</button>
       </div>
+      {notice && (
+        <div className={`calendar-feedback ${notice.type === 'error' ? 'error' : ''}`}>
+          {notice.message}
+        </div>
+      )}
       <div className="calendar-dashboard">
         <div className="calendar-card">
           <h3>Appointment Management</h3>
