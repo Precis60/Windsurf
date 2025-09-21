@@ -439,7 +439,8 @@ class SecureApiService {
     if (!this.user) {
       this.user = this.getStoredUser();
     }
-    return this.user && this.user.role === 'admin' && this.user.firstName === 'Jamie' && this.user.lastName === 'Anderson';
+    // Check for the 'admin' role provided by the backend.
+    return this.user && this.user.role === 'admin';
   }
 
   // Health Check
