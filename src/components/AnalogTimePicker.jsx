@@ -111,7 +111,7 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
           >
             <defs>
               {/* Arrowhead for Hour Hand */}
-              <marker id="hour-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+              <marker id="hour-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.5" markerHeight="1.5" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill={mode === 'hour' ? '#22314a' : '#aaa'} />
               </marker>
               {/* Arrowhead for Minute Hand */}
