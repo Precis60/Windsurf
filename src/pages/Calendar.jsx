@@ -85,42 +85,40 @@ const Calendar = () => {
     console.log('Attempting to create appointment with data:', formData);
     // Validate duration before submitting
     const duration = calculateDurationMinutes(formData.time, formData.endTime);
-    if (isNaN(duration) || duration < 15 || duration > 840) {
-      alert('Duration must be between 15 and 840 minutes.');
+    if (isNaN(duration) || duration < 15 || duration > 480) {
+      alert('Duration must be between 15 and 480 minutes.');
       return;
     }
+    // Validate customerId is a valid integer
+    if (!formData.customerId || isNaN(Number(formData.customerId)) || !Number.isInteger(Number(formData.customerId))) {
+      alert('Please select a valid client from the dropdown.');
+      return;
+    }
+    // Build payload
+    const appointmentData = {
+      title: formData.title,
+      description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
+      appointmentDate: `${formData.date}T${formData.time}:00.000Z`,
+      durationMinutes: duration,
+      customerId: Number(formData.customerId)
+    };
+    // Log payload and types for debugging
+    console.log('Appointment payload:', appointmentData);
+    Object.keys(appointmentData).forEach(key => {
+      console.log(`${key}:`, appointmentData[key], 'type:', typeof appointmentData[key]);
+    });
     try {
-      // Convert frontend data format to backend expected format
-      const appointmentData = {
-        title: formData.title,
-        description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
-        appointmentDate: `${formData.date}T${formData.time}:00.000Z`,
-        durationMinutes: duration,
-        customerId: formData.customerId || null
-      };
-      
-      console.log('Sending appointment data to backend:', appointmentData);
-      
       const result = await appointmentsService.create(appointmentData);
       console.log('Appointment created successfully:', result);
-      
       setFormData({ title: '', date: '', time: '', endTime: '', client: '', customerId: '', description: '', category: '', address: '' });
       setShowAddForm(false);
-      
       // Reload appointments
       const response = await appointmentsService.getAll();
       const appointmentList = Array.isArray(response) ? response : response.appointments || [];
-      console.log('Reloaded appointments after creation:', appointmentList);
       setAppointments(appointmentList);
-      
       alert('Appointment added successfully!');
     } catch (error) {
-      console.error('Detailed error adding appointment:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Full error object:', JSON.stringify(error, null, 2));
       let errorMessage = 'Failed to add appointment. ';
-      // Show backend error details if available
       if (error.response && error.response.data && error.response.data.error) {
         if (typeof error.response.data.error === 'string') {
           errorMessage += error.response.data.error;
@@ -129,36 +127,9 @@ const Calendar = () => {
         } else {
           errorMessage += JSON.stringify(error.response.data.error);
         }
+      } else if (error.message) {
+        errorMessage += error.message;
       }
-      // Check for specific error types
-      else if (error.message.includes('Authentication required')) {
-        errorMessage += 'Please log in again.';
-        window.location.href = '/login';
-        return;
-      } else if (error.message.includes('Session expired')) {
-        errorMessage += 'Your session has expired. Please log in again.';
-        window.location.href = '/login';
-        return;
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        errorMessage += 'Network error - backend server may not be running. Please check if the backend is started.';
-      } else if (error.message.includes('Validation failed')) {
-        errorMessage += 'Please check all required fields are filled correctly.';
-      } else if (error.message.includes('Customer not found')) {
-        errorMessage += 'The selected customer was not found.';
-      } else if (error.message.includes('Time slot conflicts')) {
-        errorMessage += 'This time slot conflicts with an existing appointment.';
-      } else {
-        errorMessage += `Error: ${error.message}`;
-      }
-      // Show detailed error in console for debugging
-      console.log('=== APPOINTMENT CREATION ERROR DEBUG ===');
-      console.log('Appointment data being sent:', appointmentData);
-      console.log('Error type:', typeof error);
-      console.log('Error constructor:', error.constructor.name);
-      console.log('Is network error:', error.message.includes('Failed to fetch'));
-      console.log('Current auth status:', authService.isAuthenticated());
-      console.log('Backend URL:', process.env.NODE_ENV === 'production' ? 'https://precision-cabling-backend.onrender.com/api' : 'http://localhost:3001/api');
-      console.log('=====================================');
       alert(errorMessage);
     }
   };
