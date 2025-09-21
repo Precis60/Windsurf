@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { authService, appointmentRequestService } from '../services/secureApi';
 
 const Portal = () => {
@@ -213,7 +214,7 @@ const Portal = () => {
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
         <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>📅 Calendar Management</h3>
         <p>Manage appointments, view schedules, and approve client requests.</p>
-        <a href="/calendar" style={{ 
+        <Link to="/calendar" style={{ 
           background: '#22314a', 
           color: 'white', 
           border: 'none', 
@@ -223,13 +224,13 @@ const Portal = () => {
           marginTop: '1rem',
           textDecoration: 'none',
           display: 'inline-block'
-        }}>Open Calendar</a>
+        }}>Open Calendar</Link>
       </div>
       
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
         <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>👥 Customer Management</h3>
         <p>Manage customer records, contacts, and relationship data.</p>
-        <a href="/crm" style={{ 
+        <Link to="/crm" style={{ 
           background: '#22314a', 
           color: 'white', 
           border: 'none', 
@@ -239,13 +240,13 @@ const Portal = () => {
           marginTop: '1rem',
           textDecoration: 'none',
           display: 'inline-block'
-        }}>Open CRM</a>
+        }}>Open CRM</Link>
       </div>
       
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
         <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>🎧 Support Center</h3>
         <p>Manage support tickets and moderate appointment requests.</p>
-        <a href="/support-portal" style={{ 
+        <Link to="/support-portal" style={{ 
           background: '#22314a', 
           color: 'white', 
           border: 'none', 
@@ -255,13 +256,13 @@ const Portal = () => {
           marginTop: '1rem',
           textDecoration: 'none',
           display: 'inline-block'
-        }}>Open Support</a>
+        }}>Open Support</Link>
       </div>
 
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
         <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>📊 Dashboard</h3>
         <p>View analytics, reports, and business overview.</p>
-        <a href="/dashboard" style={{ 
+        <Link to="/dashboard" style={{ 
           background: '#22314a', 
           color: 'white', 
           border: 'none', 
@@ -271,13 +272,13 @@ const Portal = () => {
           marginTop: '1rem',
           textDecoration: 'none',
           display: 'inline-block'
-        }}>Open Dashboard</a>
+        }}>Open Dashboard</Link>
       </div>
 
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
         <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>👤 Client Portal Access</h3>
         <p>View the client-facing portal (for testing or support).</p>
-        <a href="/client-portal" style={{ 
+        <Link to="/client-portal" style={{ 
           background: '#667eea', 
           color: 'white', 
           border: 'none', 
@@ -287,7 +288,7 @@ const Portal = () => {
           marginTop: '1rem',
           textDecoration: 'none',
           display: 'inline-block'
-        }}>View Client Portal</a>
+        }}>View Client Portal</Link>
       </div>
     </div>
     </div>
