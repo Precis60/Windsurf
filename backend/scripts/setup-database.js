@@ -57,6 +57,13 @@ async function setupDatabase() {
       )
     `);
 
+    // Ensure address columns exist on appointments (idempotent migrations)
+    await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address TEXT`);
+    await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address_place_id VARCHAR(255)`);
+    await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address_lat DOUBLE PRECISION`);
+    await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address_lng DOUBLE PRECISION`);
+    await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address_components JSONB`);
+
     // Create support_tickets table
     await query(`
       CREATE TABLE IF NOT EXISTS support_tickets (

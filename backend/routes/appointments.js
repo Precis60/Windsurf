@@ -14,6 +14,7 @@ router.get('/', authenticateToken, async (req, res) => {
     let queryText = `
       SELECT a.id, a.title, a.description, a.appointment_date, a.duration_minutes,
              a.status, a.notes, a.created_at, a.updated_at,
+             a.address, a.address_place_id, a.address_lat, a.address_lng, a.address_components,
              u.first_name, u.last_name, u.email, u.phone, u.company
       FROM appointments a
       JOIN users u ON a.customer_id = u.id
@@ -87,6 +88,11 @@ router.get('/', authenticateToken, async (req, res) => {
         durationMinutes: appointment.duration_minutes,
         status: appointment.status,
         notes: appointment.notes,
+        address: appointment.address,
+        addressPlaceId: appointment.address_place_id,
+        addressLat: appointment.address_lat,
+        addressLng: appointment.address_lng,
+        addressComponents: appointment.address_components,
         customer: {
           firstName: appointment.first_name,
           lastName: appointment.last_name,
@@ -119,7 +125,12 @@ router.post('/', authenticateToken, [
   body('description').optional().trim(),
   body('appointmentDate').isISO8601().withMessage('Valid appointment date is required'),
   body('durationMinutes').isInt({ min: 15, max: 480 }).withMessage('Duration must be between 15 and 480 minutes'),
-  body('customerId').optional().isInt().withMessage('Invalid customer ID')
+  body('customerId').optional().isInt().withMessage('Invalid customer ID'),
+  body('address').optional().isString(),
+  body('addressPlaceId').optional().isString(),
+  body('addressLat').optional().isFloat(),
+  body('addressLng').optional().isFloat(),
+  body('addressComponents').optional()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -129,7 +140,7 @@ router.post('/', authenticateToken, [
       });
     }
 
-    const { title, description, appointmentDate, durationMinutes, customerId } = req.body;
+    const { title, description, appointmentDate, durationMinutes, customerId, address, addressPlaceId, addressLat, addressLng, addressComponents } = req.body;
     
     // Determine customer ID
     let finalCustomerId;
@@ -175,10 +186,15 @@ router.post('/', authenticateToken, [
     }
 
     const result = await query(
-      `INSERT INTO appointments (customer_id, title, description, appointment_date, duration_minutes)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, title, description, appointment_date, duration_minutes, status, created_at`,
-      [finalCustomerId, title, description, appointmentDate, durationMinutes]
+      `INSERT INTO appointments (
+         customer_id, title, description, appointment_date, duration_minutes,
+         address, address_place_id, address_lat, address_lng, address_components
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::jsonb)
+       RETURNING id, title, description, appointment_date, duration_minutes, status, created_at,
+                 address, address_place_id, address_lat, address_lng, address_components`,
+      [finalCustomerId, title, description, appointmentDate, durationMinutes,
+       address || null, addressPlaceId || null, addressLat ?? null, addressLng ?? null, addressComponents ? JSON.stringify(addressComponents) : null]
     );
 
     const appointment = result.rows[0];
@@ -192,7 +208,12 @@ router.post('/', authenticateToken, [
         appointmentDate: appointment.appointment_date,
         durationMinutes: appointment.duration_minutes,
         status: appointment.status,
-        createdAt: appointment.created_at
+        createdAt: appointment.created_at,
+        address: appointment.address,
+        addressPlaceId: appointment.address_place_id,
+        addressLat: appointment.address_lat,
+        addressLng: appointment.address_lng,
+        addressComponents: appointment.address_components
       }
     });
 
@@ -221,6 +242,7 @@ router.get('/:id', authenticateToken, [
     let queryText = `
       SELECT a.id, a.title, a.description, a.appointment_date, a.duration_minutes,
              a.status, a.notes, a.created_at, a.updated_at,
+             a.address, a.address_place_id, a.address_lat, a.address_lng, a.address_components,
              u.first_name, u.last_name, u.email, u.phone, u.company
       FROM appointments a
       JOIN users u ON a.customer_id = u.id
@@ -253,6 +275,11 @@ router.get('/:id', authenticateToken, [
         durationMinutes: appointment.duration_minutes,
         status: appointment.status,
         notes: appointment.notes,
+        address: appointment.address,
+        addressPlaceId: appointment.address_place_id,
+        addressLat: appointment.address_lat,
+        addressLng: appointment.address_lng,
+        addressComponents: appointment.address_components,
         customer: {
           firstName: appointment.first_name,
           lastName: appointment.last_name,
@@ -281,7 +308,12 @@ router.put('/:id', authenticateToken, [
   body('appointmentDate').optional().isISO8601().withMessage('Valid appointment date is required'),
   body('durationMinutes').optional().isInt({ min: 15, max: 480 }).withMessage('Duration must be between 15 and 480 minutes'),
   body('status').optional().isIn(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled']).withMessage('Invalid status'),
-  body('notes').optional().trim()
+  body('notes').optional().trim(),
+  body('address').optional().isString(),
+  body('addressPlaceId').optional().isString(),
+  body('addressLat').optional().isFloat(),
+  body('addressLng').optional().isFloat(),
+  body('addressComponents').optional()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -292,7 +324,7 @@ router.put('/:id', authenticateToken, [
     }
 
     const appointmentId = req.params.id;
-    const { title, description, appointmentDate, durationMinutes, status, notes } = req.body;
+    const { title, description, appointmentDate, durationMinutes, status, notes, address, addressPlaceId, addressLat, addressLng, addressComponents } = req.body;
 
     // Check if appointment exists and user has permission
     let checkQuery = 'SELECT customer_id FROM appointments WHERE id = $1';
@@ -352,6 +384,36 @@ router.put('/:id', authenticateToken, [
       updateValues.push(notes);
     }
 
+    if (address !== undefined) {
+      paramCount++;
+      updateFields.push(`address = $${paramCount}`);
+      updateValues.push(address);
+    }
+
+    if (addressPlaceId !== undefined) {
+      paramCount++;
+      updateFields.push(`address_place_id = $${paramCount}`);
+      updateValues.push(addressPlaceId);
+    }
+
+    if (addressLat !== undefined) {
+      paramCount++;
+      updateFields.push(`address_lat = $${paramCount}`);
+      updateValues.push(addressLat);
+    }
+
+    if (addressLng !== undefined) {
+      paramCount++;
+      updateFields.push(`address_lng = $${paramCount}`);
+      updateValues.push(addressLng);
+    }
+
+    if (addressComponents !== undefined) {
+      paramCount++;
+      updateFields.push(`address_components = $${paramCount}::jsonb`);
+      updateValues.push(addressComponents ? JSON.stringify(addressComponents) : null);
+    }
+
     if (updateFields.length === 0) {
       return res.status(400).json({ 
         error: { message: 'No fields provided for update' } 
@@ -365,7 +427,8 @@ router.put('/:id', authenticateToken, [
     const result = await query(
       `UPDATE appointments SET ${updateFields.join(', ')} 
        WHERE id = $${paramCount}
-       RETURNING id, title, description, appointment_date, duration_minutes, status, notes, updated_at`,
+       RETURNING id, title, description, appointment_date, duration_minutes, status, notes, updated_at,
+                 address, address_place_id, address_lat, address_lng, address_components`,
       updateValues
     );
 
@@ -380,7 +443,12 @@ router.put('/:id', authenticateToken, [
         durationMinutes: appointment.duration_minutes,
         status: appointment.status,
         notes: appointment.notes,
-        updatedAt: appointment.updated_at
+        updatedAt: appointment.updated_at,
+        address: appointment.address,
+        addressPlaceId: appointment.address_place_id,
+        addressLat: appointment.address_lat,
+        addressLng: appointment.address_lng,
+        addressComponents: appointment.address_components
       }
     });
 
