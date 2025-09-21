@@ -109,6 +109,17 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
               userSelect: 'none'
             }}
           >
+            <defs>
+              {/* Arrowhead for Hour Hand */}
+              <marker id="hour-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill={mode === 'hour' ? '#22314a' : '#aaa'} />
+              </marker>
+              {/* Arrowhead for Minute Hand */}
+              <marker id="minute-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill={mode === 'minute' ? '#dc3545' : '#aaa'} />
+              </marker>
+            </defs>
+
             {/* Clock face */}
             <circle cx="50" cy="50" r="45" fill="white" stroke="#22314a" strokeWidth="1" />
             
@@ -125,8 +136,8 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
               x2={50 + 25 * Math.cos(hourAngle * Math.PI / 180)}
               y2={50 + 25 * Math.sin(hourAngle * Math.PI / 180)}
               stroke={mode === 'hour' ? '#22314a' : '#aaa'}
-              strokeWidth={mode === 'hour' ? '5' : '3'}
-              strokeLinecap="round"
+              strokeWidth={mode === 'hour' ? '4' : '2'}
+              markerEnd="url(#hour-arrow)"
               pointerEvents="none"
             />
             
@@ -137,29 +148,14 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
               x2={50 + 35 * Math.cos(minuteAngle * Math.PI / 180)}
               y2={50 + 35 * Math.sin(minuteAngle * Math.PI / 180)}
               stroke={mode === 'minute' ? '#dc3545' : '#aaa'}
-              strokeWidth={mode === 'minute' ? '4' : '2'}
-              strokeLinecap="round"
+              strokeWidth={mode === 'minute' ? '3' : '1'}
+              markerEnd="url(#minute-arrow)"
               pointerEvents="none"
             />
             
             {/* Center dot */}
             <circle cx="50" cy="50" r="3" fill="#22314a" pointerEvents="none" />
             
-            {/* Hand indicators */}
-            <circle
-              cx={50 + 25 * Math.cos(hourAngle * Math.PI / 180)}
-              cy={50 + 25 * Math.sin(hourAngle * Math.PI / 180)}
-              r="4"
-              fill={mode === 'hour' ? '#22314a' : '#aaa'}
-              pointerEvents="none"
-            />
-            <circle
-              cx={50 + 35 * Math.cos(minuteAngle * Math.PI / 180)}
-              cy={50 + 35 * Math.sin(minuteAngle * Math.PI / 180)}
-              r="3"
-              fill={mode === 'minute' ? '#dc3545' : '#aaa'}
-              pointerEvents="none"
-            />
           </svg>
         </div>
         
