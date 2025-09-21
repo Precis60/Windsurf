@@ -443,7 +443,7 @@ const Calendar = () => {
               return (
                 <div key={index} className={`calendar-day ${!isCurrentMonth ? 'calendar-day-muted' : ''} ${isToday ? 'calendar-day-today' : ''}`}>
                   <div className="calendar-day-date">{date.getDate()}</div>
-                  {dayAppointments.map(apt => (
+                  {dayAppointments.filter(apt => apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim()).map(apt => (
                     <div key={apt.id} className="calendar-appointment" onClick={() => {
                       setFormData(apt);
                       setEditingAppointment(apt.id);
@@ -485,8 +485,7 @@ const Calendar = () => {
                       {generateTimeSlots().map((time, timeIndex) => (
                         <div key={time} className="calendar-time-slot"></div>
                       ))}
-                      {dayAppointments.map(apt => {
-                        if (!apt.time || !apt.endTime) return null;
+                      {dayAppointments.filter(apt => apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim()).map(apt => {
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
                         const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                         // Calculate position: each 15-minute slot = 15px
@@ -536,8 +535,7 @@ const Calendar = () => {
                 {generateTimeSlots().map((time, timeIndex) => (
                   <div key={time} className="calendar-time-slot"></div>
                 ))}
-                {getAppointmentsForDate(currentDate).map(apt => {
-                  if (!apt.time || !apt.endTime) return null;
+                {getAppointmentsForDate(currentDate).filter(apt => apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim()).map(apt => {
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
                   const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                   // Calculate position: each 15-minute slot = 15px
