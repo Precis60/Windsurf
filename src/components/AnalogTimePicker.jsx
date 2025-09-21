@@ -136,7 +136,7 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
               x2={50 + 25 * Math.cos(hourAngle * Math.PI / 180)}
               y2={50 + 25 * Math.sin(hourAngle * Math.PI / 180)}
               stroke={mode === 'hour' ? '#22314a' : '#aaa'}
-              strokeWidth={mode === 'hour' ? '4' : '2'}
+              strokeWidth={mode === 'hour' ? '3' : '1'}
               markerEnd="url(#hour-arrow)"
               pointerEvents="none"
             />
