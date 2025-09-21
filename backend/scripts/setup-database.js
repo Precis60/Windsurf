@@ -195,14 +195,15 @@ async function setupDatabase() {
   } catch (error) {
     console.error('❌ Database setup failed:', error);
     process.exit(1);
-  } finally {
-    await closePool();
   }
 }
 
 // Run setup if this file is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  setupDatabase();
+  // If executed directly, ensure pool is closed when complete
+  setupDatabase().finally(async () => {
+    await closePool();
+  });
 }
 
 export default setupDatabase;
