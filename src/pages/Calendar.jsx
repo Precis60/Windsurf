@@ -205,15 +205,29 @@ const Calendar = () => {
   // Get appointments for a specific date
   const getAppointmentsForDate = (date) => {
     const dateStr = date.toISOString().split('T')[0];
-    return appointments.filter(apt => {
+    console.log('Looking for appointments on date:', dateStr);
+    console.log('All appointments:', appointments);
+    
+    const filtered = appointments.filter(apt => {
       // Handle both old format (apt.date) and new backend format (apt.appointmentDate)
       const appointmentDate = apt.appointmentDate || apt.date;
-      if (!appointmentDate) return false;
+      console.log('Checking appointment:', apt.id, 'appointmentDate:', appointmentDate);
+      
+      if (!appointmentDate) {
+        console.log('No appointment date found for appointment:', apt);
+        return false;
+      }
       
       // Extract date part from ISO string
       const aptDateStr = appointmentDate.split('T')[0];
-      return aptDateStr === dateStr;
+      const matches = aptDateStr === dateStr;
+      console.log('Date comparison:', aptDateStr, 'vs', dateStr, '=', matches);
+      
+      return matches;
     });
+    
+    console.log('Filtered appointments for', dateStr, ':', filtered);
+    return filtered;
   };
 
   // Generate calendar days for monthly view
@@ -460,7 +474,11 @@ const Calendar = () => {
               return (
                 <div key={index} className={`calendar-day ${!isCurrentMonth ? 'calendar-day-muted' : ''} ${isToday ? 'calendar-day-today' : ''}`}>
                   <div className="calendar-day-date">{date.getDate()}</div>
-                  {dayAppointments.filter(apt => apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim()).map(apt => (
+                  {dayAppointments.filter(apt => {
+                    const hasTime = apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim();
+                    console.log('Appointment filter check:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
+                    return hasTime;
+                  }).map(apt => (
                     <div key={apt.id} className="calendar-appointment" onClick={() => {
                       setFormData(apt);
                       setEditingAppointment(apt.id);
@@ -502,7 +520,11 @@ const Calendar = () => {
                       {generateTimeSlots().map((time, timeIndex) => (
                         <div key={time} className="calendar-time-slot"></div>
                       ))}
-                      {dayAppointments.filter(apt => apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim()).map(apt => {
+                      {dayAppointments.filter(apt => {
+                        const hasTime = apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim();
+                        console.log('Weekly view appointment filter:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
+                        return hasTime;
+                      }).map(apt => {
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
                         const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                         // Calculate position: each 15-minute slot = 15px
@@ -552,7 +574,11 @@ const Calendar = () => {
                 {generateTimeSlots().map((time, timeIndex) => (
                   <div key={time} className="calendar-time-slot"></div>
                 ))}
-                {getAppointmentsForDate(currentDate).filter(apt => apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim()).map(apt => {
+                {getAppointmentsForDate(currentDate).filter(apt => {
+                  const hasTime = apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim();
+                  console.log('Daily view appointment filter:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
+                  return hasTime;
+                }).map(apt => {
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
                   const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                   // Calculate position: each 15-minute slot = 15px
