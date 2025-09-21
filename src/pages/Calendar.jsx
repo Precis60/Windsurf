@@ -26,6 +26,13 @@ const Calendar = () => {
     address: ''
   });
 
+  // Autocomplete state for client selection
+  const [clientSearch, setClientSearch] = useState('');
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const filteredCustomers = customers.filter(c =>
+    `${c.firstName} ${c.lastName}`.toLowerCase().includes(clientSearch.toLowerCase())
+  );
+
   // 20 appointment categories
   const categories = [
     'Site Survey', 'Network Installation', 'Cable Installation', 'Equipment Setup',
@@ -415,14 +422,39 @@ const Calendar = () => {
                 required
                 style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
               />
-              <input
-                type="text"
-                placeholder="Client Name"
-                value={formData.client}
-                onChange={(e) => setFormData({...formData, client: e.target.value})}
-                required
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  placeholder="Select Client"
+                  value={clientSearch || formData.client}
+                  onChange={e => {
+                    setClientSearch(e.target.value);
+                    setShowClientDropdown(true);
+                    setFormData({ ...formData, client: e.target.value, customerId: '' });
+                  }}
+                  onFocus={() => setShowClientDropdown(true)}
+                  autoComplete="off"
+                  required
+                  style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
+                />
+                {showClientDropdown && filteredCustomers.length > 0 && (
+                  <div style={{ position: 'absolute', zIndex: 10, background: 'white', border: '1px solid #ccc', width: '100%', maxHeight: 180, overflowY: 'auto', borderRadius: 4 }}>
+                    {filteredCustomers.map(c => (
+                      <div
+                        key={c.id}
+                        style={{ padding: '0.5rem', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                        onClick={() => {
+                          setFormData({ ...formData, client: `${c.firstName} ${c.lastName}`, customerId: c.id });
+                          setClientSearch(`${c.firstName} ${c.lastName}`);
+                          setShowClientDropdown(false);
+                        }}
+                      >
+                        {c.firstName} {c.lastName} {c.company ? `(${c.company})` : ''}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <input
                 type="date"
                 value={formData.date}
