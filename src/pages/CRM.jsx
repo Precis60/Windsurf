@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { customersService, authService } from '../services/secureApi';
+import './CRM.css';
 
 const CRM = () => {
   // Authentication state
@@ -344,233 +345,75 @@ const CRM = () => {
   // If loading, show loading state
   if (loading) {
     return (
-      <div className="page-content" style={{ 
-        padding: '2rem', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '50vh' 
-      }}>
-        <div style={{ textAlign: 'center', color: '#666' }}>
-          <h2>Loading CRM...</h2>
-          <p>Please wait while we load your customer data.</p>
-        </div>
+      <div className="crm-container" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h2>Loading CRM...</h2>
       </div>
     );
   }
-
   // If not authenticated, show message to login
   if (!isAuthenticated) {
     return (
-      <div className="page-content" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ background: '#f8f9fa', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', textAlign: 'center' }}>
-          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>🔒 CRM Access Required</h1>
-          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>
-            Please log in to access the secure customer relationship management system.
-          </p>
-          
-          <div style={{
-            background: '#e8f5e8',
-            border: '1px solid #4caf50',
-            borderRadius: '8px',
-            padding: '20px',
-            marginBottom: '20px'
-          }}>
-            <p style={{ 
-              margin: 0, 
-              color: '#2e7d32',
-              fontSize: '14px'
-            }}>
-              🔐 <strong>Secure Access:</strong> This CRM contains sensitive customer information and requires authentication.
-            </p>
-          </div>
-
-          <a 
-            href="/login" 
-            style={{
-              background: '#22314a',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: '500',
-              display: 'inline-block'
-            }}
-          >
-            Go to Login Page
-          </a>
+      <div className="crm-container">
+        <div className="crm-card" style={{ maxWidth: 500, margin: '3rem auto', textAlign: 'center' }}>
+          <h1 className="crm-title">🔒 CRM Access Required</h1>
+          <p style={{ color: '#666', marginBottom: 24 }}>Please log in to access the CRM system.</p>
+          <a href="/login" className="crm-btn-main">Go to Login Page</a>
         </div>
       </div>
     );
   }
-
   return (
-    <div className="page-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <div>
-          <h1 style={{ color: '#22314a', margin: 0 }}>Customer Relationship Management</h1>
-        </div>
-        <button 
-          onClick={() => {
-            authService.logout();
-            setIsAuthenticated(false);
-            window.location.href = '/';
-          }} 
-          style={{...buttonStyle, background: '#dc3545'}}
-        >
-          Logout
-        </button>
+    <div className="crm-container">
+      <div className="crm-header">
+        <h1 className="crm-title">Customer Relationship Management</h1>
+        <button className="crm-logout-btn" onClick={() => { authService.logout(); setIsAuthenticated(false); window.location.href = '/'; }}>Logout</button>
       </div>
-      <p style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>Manage customer relationships and track project progress.</p>
-    
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-      <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Customer Database</h3>
-        <p>View and manage customer information, contact details, and project history.</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-          <button 
-            onClick={() => {
-              setShowCustomerList(!showCustomerList);
-              setShowCustomerForm(false);
-              setEditingCustomer(null);
-            }}
-            style={{
-              ...buttonStyle,
-              width: '100%',
-              padding: '0.5rem 1rem',
-              fontSize: '0.9rem'
-            }}
-          >
+      <div className="crm-dashboard">
+        <div className="crm-card">
+          <h3>Customer Database</h3>
+          <p>View and manage customer information, contact details, and project history.</p>
+          <button className="crm-btn-main" onClick={() => { setShowCustomerList(!showCustomerList); setShowCustomerForm(false); setEditingCustomer(null); }}>
             {showCustomerList ? 'Hide Customers' : 'View Customers'}
           </button>
-          <button 
-            onClick={() => {
-              console.log('Add Customer button clicked');
-              setShowCustomerForm(true);
-              setShowCustomerList(false);
-              setEditingCustomer(null);
-              setCustomerForm({
-                companyName: '',
-                contactName: '',
-                email: '',
-                phone: '',
-                address: '',
-                city: '',
-                state: '',
-                zipCode: '',
-                projectType: '',
-                notes: ''
-              });
-            }}
-            style={{
-              ...buttonStyle,
-              background: '#28a745',
-              width: '100%',
-              padding: '0.5rem 1rem',
-              fontSize: '0.9rem'
-            }}
-          >
+          <button className="crm-btn-secondary" onClick={() => { setShowCustomerForm(true); setShowCustomerList(false); setEditingCustomer(null); setCustomerForm({ companyName: '', contactName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', projectType: '', notes: '' }); }}>
             Add Customer
           </button>
         </div>
+        <div className="crm-card">
+          <h3>Active Projects</h3>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            <li>Office Building Wiring - 75% Complete</li>
+            <li>Factory Automation - 40% Complete</li>
+            <li>Warehouse Network - Planning Phase</li>
+          </ul>
+        </div>
+        <div className="crm-card">
+          <h3>Recent Activity</h3>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            <li>New quote sent to ABC Corp</li>
+            <li>Project milestone reached</li>
+            <li>Customer feedback received</li>
+          </ul>
+        </div>
       </div>
-      
-      <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Active Projects</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #dee2e6' }}>Office Building Wiring - 75% Complete</li>
-          <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #dee2e6' }}>Factory Automation - 40% Complete</li>
-          <li style={{ padding: '0.5rem 0' }}>Warehouse Network - Planning Phase</li>
-        </ul>
-      </div>
-      
-      <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Recent Activity</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #dee2e6' }}>New quote sent to ABC Corp</li>
-          <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #dee2e6' }}>Project milestone reached</li>
-          <li style={{ padding: '0.5rem 0' }}>Customer feedback received</li>
-        </ul>
-      </div>
-    </div>
-
-    {/* Customer Management Section */}
-    {(showCustomerForm || showCustomerList) && (
-      <div style={{ marginTop: '3rem' }}>
-        <h2 style={{ color: '#22314a', marginBottom: '1.5rem' }}>👥 Customer Management</h2>
-        
-        {/* Add/Edit Customer Form */}
-        {showCustomerForm && (
-          <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef', marginBottom: '2rem' }}>
-            <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>
-              {editingCustomer ? 'Edit Customer' : 'Add New Customer'}
-            </h3>
-            <form onSubmit={editingCustomer ? handleUpdateCustomer : handleAddCustomer} noValidate>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                <input
-                  type="text"
-                  placeholder="Company Name"
-                  value={customerForm.companyName}
-                  onChange={(e) => setCustomerForm({...customerForm, companyName: e.target.value})}
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="text"
-                  placeholder="Contact Name"
-                  value={customerForm.contactName}
-                  onChange={(e) => setCustomerForm({...customerForm, contactName: e.target.value})}
-                  required
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={customerForm.email}
-                  onChange={(e) => setCustomerForm({...customerForm, email: e.target.value})}
-                  required
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="tel"
-                  placeholder="Phone Number"
-                  value={customerForm.phone}
-                  onChange={(e) => setCustomerForm({...customerForm, phone: e.target.value})}
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="text"
-                  placeholder="Street Address"
-                  value={customerForm.address}
-                  onChange={(e) => setCustomerForm({...customerForm, address: e.target.value})}
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="text"
-                  placeholder="City"
-                  value={customerForm.city}
-                  onChange={(e) => setCustomerForm({...customerForm, city: e.target.value})}
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="text"
-                  placeholder="State"
-                  value={customerForm.state}
-                  onChange={(e) => setCustomerForm({...customerForm, state: e.target.value})}
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <input
-                  type="text"
-                  placeholder="ZIP Code"
-                  value={customerForm.zipCode}
-                  onChange={(e) => setCustomerForm({...customerForm, zipCode: e.target.value})}
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                <select
-                  value={customerForm.projectType}
-                  onChange={(e) => setCustomerForm({...customerForm, projectType: e.target.value})}
-                  style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc' }}
-                >
+      {/* Customer Management Section */}
+      {(showCustomerForm || showCustomerList) && (
+        <div className="crm-section">
+          <h2 style={{ color: '#22314a', marginBottom: '1.5rem' }}>👥 Customer Management</h2>
+          {/* Add/Edit Customer Form */}
+          {showCustomerForm && (
+            <div className="crm-form">
+              <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>{editingCustomer ? 'Edit Customer' : 'Add New Customer'}</h3>
+              <form onSubmit={editingCustomer ? handleUpdateCustomer : handleAddCustomer} noValidate>
+                <input type="text" placeholder="Company Name" value={customerForm.companyName} onChange={e => setCustomerForm({ ...customerForm, companyName: e.target.value })} />
+                <input type="text" placeholder="Contact Name" value={customerForm.contactName} onChange={e => setCustomerForm({ ...customerForm, contactName: e.target.value })} required />
+                <input type="email" placeholder="Email Address" value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} required />
+                <input type="tel" placeholder="Phone Number" value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} />
+                <input type="text" placeholder="Street Address" value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} />
+                <input type="text" placeholder="City" value={customerForm.city} onChange={e => setCustomerForm({ ...customerForm, city: e.target.value })} />
+                <input type="text" placeholder="State" value={customerForm.state} onChange={e => setCustomerForm({ ...customerForm, state: e.target.value })} />
+                <input type="text" placeholder="ZIP Code" value={customerForm.zipCode} onChange={e => setCustomerForm({ ...customerForm, zipCode: e.target.value })} />
+                <select value={customerForm.projectType} onChange={e => setCustomerForm({ ...customerForm, projectType: e.target.value })}>
                   <option value="">Select Project Type</option>
                   <option value="Network Infrastructure">Network Infrastructure</option>
                   <option value="Cable Installation">Cable Installation</option>
@@ -581,170 +424,47 @@ const CRM = () => {
                   <option value="Upgrade">Upgrade</option>
                   <option value="Emergency Service">Emergency Service</option>
                 </select>
-              </div>
-              <textarea
-                placeholder="Notes (optional)"
-                value={customerForm.notes}
-                onChange={(e) => setCustomerForm({...customerForm, notes: e.target.value})}
-                style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #ccc', minHeight: '80px', marginBottom: '1rem' }}
-              />
-              {/* Inline feedback message */}
-              {formMessage.text && (
-                <div 
-                  role="alert" 
-                  style={{
-                    marginBottom: '0.75rem',
-                    padding: '0.5rem 0.75rem',
-                    borderRadius: 6,
-                    border: `1px solid ${formMessage.type === 'error' ? '#f5c2c7' : '#badbcc'}`,
-                    background: formMessage.type === 'error' ? '#f8d7da' : '#d1e7dd',
-                    color: formMessage.type === 'error' ? '#842029' : '#0f5132'
-                  }}
-
-            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <button 
-                type="button"
-                style={{
-                  ...buttonStyle,
-                  background: submitting ? '#6c757d' : '#007bff',
-                  cursor: submitting ? 'not-allowed' : 'pointer'
-                }}
-                disabled={submitting}
-                onClick={async () => {
-                  console.log('Save Customer button clicked - saving to online database');
-                  setSubmitting(true);
-                  setFormMessage({ type: '', text: '' });
-                  
-                  try {
-                    // Validate required fields
-                    if (!customerForm.contactName?.trim()) {
-                      setFormMessage({ type: 'error', text: 'Contact Name is required' });
-                      setSubmitting(false);
-                      return;
-                    }
-                    
-                    if (!customerForm.email?.trim()) {
-                      setFormMessage({ type: 'error', text: 'Email is required' });
-                      setSubmitting(false);
-                      return;
-                    }
-                    
-                    // Prepare data for backend API
-                    const nameParts = customerForm.contactName.trim().split(' ');
-                    const firstName = nameParts[0] || 'Customer';
-                    const lastName = nameParts.slice(1).join(' ') || '';
-                    
-                    const customerData = {
-                      firstName: firstName,
-                      lastName: lastName,
-                      email: customerForm.email.trim(),
-                      phone: customerForm.phone?.trim() || null,
-                      company: customerForm.companyName?.trim() || null,
-                      address: [customerForm.address, customerForm.city, customerForm.state, customerForm.zipCode].filter(Boolean).join(', ') || null
-                    };
-                    
-                    console.log('Sending to online database:', customerData);
-                    
-                    // Save to online database
-                    const result = await customersService.create(customerData);
-                    console.log('Customer saved to online database:', result);
-                    
-                    // Reload customers from database
-                    const response = await customersService.getAll();
-                    const customerList = Array.isArray(response) ? response : response.customers || [];
-                    setCustomers(customerList);
-                    
-                    // Clear form and close
-                    setCustomerForm({
-                      companyName: '',
-                      contactName: '',
-                      email: '',
-                      phone: '',
-                      address: '',
-                      city: '',
-                      state: '',
-                      zipCode: '',
-                      projectType: '',
-                      notes: ''
-                    });
-                  }}
-                  style={{
-                    ...buttonStyle,
-                    background: '#6c757d'
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Customer List */}
-        {showCustomerList && (
-          <div>
-            <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Customer Database ({customers.length} customers)</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1rem' }}>
-              {customers.length === 0 ? (
-                <div style={{ background: '#f8f9fa', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', textAlign: 'center', color: '#666' }}>
-                  <p>No customers added yet. Click "Add Customer" to get started.</p>
+                <textarea placeholder="Notes (optional)" value={customerForm.notes} onChange={e => setCustomerForm({ ...customerForm, notes: e.target.value })} />
+                {formMessage.text && (
+                  <div className={`crm-feedback ${formMessage.type}`}>{formMessage.text}</div>
+                )}
+                <div className="crm-form-actions">
+                  <button className="crm-btn-main" type="submit" disabled={submitting}>{editingCustomer ? 'Update Customer' : 'Add Customer'}</button>
+                  <button className="crm-btn-secondary" type="button" onClick={() => { setShowCustomerForm(false); setEditingCustomer(null); }}>Cancel</button>
                 </div>
-              ) : (
-                customers.map(customer => (
-                  <div key={customer.id} style={{ background: '#fff', padding: '1.5rem', borderRadius: '8px', border: '1px solid #dee2e6', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                      <h4 style={{ color: '#22314a', margin: 0, fontSize: '1.2rem' }}>{customer.firstName} {customer.lastName}</h4>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button 
-                          onClick={() => handleEditCustomer(customer)}
-                          style={{ ...buttonStyle, padding: '0.25rem 0.5rem', fontSize: '0.8rem', background: '#28a745' }}
-                        >
-                          Edit
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteCustomer(customer.id)}
-                          style={{ ...buttonStyle, padding: '0.25rem 0.5rem', fontSize: '0.8rem', background: '#dc3545' }}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong>Company:</strong> {customer.company}
-                    </div>
-                    
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong>Email:</strong> 
-                      <a href={`mailto:${customer.email}`} style={{ color: '#007bff', textDecoration: 'none', marginLeft: '0.5rem' }}>
-                        {customer.email}
-                      </a>
-                    </div>
-                    
-                    <div style={{ marginBottom: '0.5rem' }}>
-                      <strong>Phone:</strong> 
-                      <a href={`tel:${customer.phone}`} style={{ color: '#007bff', textDecoration: 'none', marginLeft: '0.5rem' }}>
-                        {customer.phone}
-                      </a>
-                    </div>
-                    
-                    {customer.address && (
-                      <div style={{ marginBottom: '0.5rem' }}>
-                        <strong>Address:</strong> {customer.address}
-                      </div>
-                    )}
-                    
-                    <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem' }}>
-                      Added: {new Date(customer.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))
-              )}
+              </form>
             </div>
-          </div>
-        )}
-      </div>
-    )}
+          )}
+          {/* Customer List */}
+          {showCustomerList && (
+            <div>
+              <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Customer Database ({customers.length} customers)</h3>
+              <div className="crm-customer-list">
+                {customers.length === 0 ? (
+                  <div className="crm-card" style={{ textAlign: 'center', color: '#666' }}>
+                    <p>No customers added yet. Click "Add Customer" to get started.</p>
+                  </div>
+                ) : (
+                  customers.map(customer => (
+                    <div key={customer.id} className="crm-customer-card">
+                      <h4>{customer.firstName} {customer.lastName}</h4>
+                      <div><strong>Company:</strong> {customer.company}</div>
+                      <div><strong>Email:</strong> <a href={`mailto:${customer.email}`} style={{ color: '#007bff', textDecoration: 'none', marginLeft: '0.5rem' }}>{customer.email}</a></div>
+                      <div><strong>Phone:</strong> <a href={`tel:${customer.phone}`} style={{ color: '#007bff', textDecoration: 'none', marginLeft: '0.5rem' }}>{customer.phone}</a></div>
+                      {customer.address && (<div><strong>Address:</strong> {customer.address}</div>)}
+                      <div style={{ fontSize: '0.8rem', color: '#666', marginTop: '1rem' }}>Added: {new Date(customer.createdAt).toLocaleDateString()}</div>
+                      <div className="crm-customer-actions">
+                        <button className="crm-btn-edit" onClick={() => handleEditCustomer(customer)}>Edit</button>
+                        <button className="crm-btn-delete" onClick={() => handleDeleteCustomer(customer.id)}>Delete</button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
