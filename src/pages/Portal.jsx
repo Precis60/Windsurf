@@ -211,41 +211,83 @@ const Portal = () => {
     
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Client Login</h3>
-        <p>Access your project documents, invoices, and progress updates.</p>
-        <button style={{ 
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>📅 Calendar Management</h3>
+        <p>Manage appointments, view schedules, and approve client requests.</p>
+        <a href="/calendar" style={{ 
           background: '#22314a', 
           color: 'white', 
           border: 'none', 
           padding: '0.75rem 1.5rem', 
           borderRadius: '4px', 
           cursor: 'pointer',
-          marginTop: '1rem'
-        }}>Client Login</button>
+          marginTop: '1rem',
+          textDecoration: 'none',
+          display: 'inline-block'
+        }}>Open Calendar</a>
       </div>
       
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Staff Portal</h3>
-        <p>Internal tools for project management, timesheets, and team communication.</p>
-        <button style={{ 
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>👥 Customer Management</h3>
+        <p>Manage customer records, contacts, and relationship data.</p>
+        <a href="/crm" style={{ 
           background: '#22314a', 
           color: 'white', 
           border: 'none', 
           padding: '0.75rem 1.5rem', 
           borderRadius: '4px', 
           cursor: 'pointer',
-          marginTop: '1rem'
-        }}>Staff Login</button>
+          marginTop: '1rem',
+          textDecoration: 'none',
+          display: 'inline-block'
+        }}>Open CRM</a>
       </div>
       
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Quick Access</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #dee2e6' }}>📄 Project Documents</li>
-          <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #dee2e6' }}>💰 Invoice Management</li>
-          <li style={{ padding: '0.5rem 0', borderBottom: '1px solid #dee2e6' }}>📊 Progress Reports</li>
-          <li style={{ padding: '0.5rem 0' }}>💬 Message Center</li>
-        </ul>
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>🎧 Support Center</h3>
+        <p>Manage support tickets and moderate appointment requests.</p>
+        <a href="/support-portal" style={{ 
+          background: '#22314a', 
+          color: 'white', 
+          border: 'none', 
+          padding: '0.75rem 1.5rem', 
+          borderRadius: '4px', 
+          cursor: 'pointer',
+          marginTop: '1rem',
+          textDecoration: 'none',
+          display: 'inline-block'
+        }}>Open Support</a>
+      </div>
+
+      <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>📊 Dashboard</h3>
+        <p>View analytics, reports, and business overview.</p>
+        <a href="/dashboard" style={{ 
+          background: '#22314a', 
+          color: 'white', 
+          border: 'none', 
+          padding: '0.75rem 1.5rem', 
+          borderRadius: '4px', 
+          cursor: 'pointer',
+          marginTop: '1rem',
+          textDecoration: 'none',
+          display: 'inline-block'
+        }}>Open Dashboard</a>
+      </div>
+
+      <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>👤 Client Portal Access</h3>
+        <p>View the client-facing portal (for testing or support).</p>
+        <a href="/client-portal" style={{ 
+          background: '#667eea', 
+          color: 'white', 
+          border: 'none', 
+          padding: '0.75rem 1.5rem', 
+          borderRadius: '4px', 
+          cursor: 'pointer',
+          marginTop: '1rem',
+          textDecoration: 'none',
+          display: 'inline-block'
+        }}>View Client Portal</a>
       </div>
     </div>
     </div>
