@@ -486,6 +486,7 @@ const Calendar = () => {
                         <div key={time} className="calendar-time-slot"></div>
                       ))}
                       {dayAppointments.map(apt => {
+                        if (!apt.time || !apt.endTime) return null;
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
                         const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                         // Calculate position: each 15-minute slot = 15px
@@ -536,6 +537,7 @@ const Calendar = () => {
                   <div key={time} className="calendar-time-slot"></div>
                 ))}
                 {getAppointmentsForDate(currentDate).map(apt => {
+                  if (!apt.time || !apt.endTime) return null;
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
                   const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                   // Calculate position: each 15-minute slot = 15px
