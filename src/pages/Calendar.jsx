@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { zonedTimeToUtc, utcToZonedTime, format } from 'date-fns-tz';
 import { appointmentsService, authService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import CustomConfirmModal from '../components/CustomConfirmModal';
 import '../Calendar.css';
 
 const Calendar = () => {
+  const timeZone = 'Australia/Sydney'; // AEST/AEDT
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -55,32 +57,30 @@ const Calendar = () => {
     checkAuth();
   }, []);
 
-  // Helper function to convert backend appointment format to calendar format
+  // Helper function to convert backend UTC appointments to AEST for display
   const transformAppointment = (apt) => {
     if (!apt.appointmentDate) return apt;
-    
-    // Parse the appointmentDate
-    const appointmentDate = new Date(apt.appointmentDate);
-    
-    // Extract time components
-    const hours = appointmentDate.getHours().toString().padStart(2, '0');
-    const minutes = appointmentDate.getMinutes().toString().padStart(2, '0');
-    const startTime = `${hours}:${minutes}`;
-    
-    // Calculate end time from duration
+
+    // Treat the backend date string as UTC and convert it to a zoned time object for AEST
+    const zonedDate = utcToZonedTime(apt.appointmentDate, timeZone);
+
+    // Format the start time in AEST
+    const startTime = format(zonedDate, 'HH:mm', { timeZone });
+
+    // Calculate end time
     let endTime = startTime;
     if (apt.durationMinutes) {
-      const endDate = new Date(appointmentDate.getTime() + (apt.durationMinutes * 60000));
-      const endHours = endDate.getHours().toString().padStart(2, '0');
-      const endMinutes = endDate.getMinutes().toString().padStart(2, '0');
-      endTime = `${endHours}:${endMinutes}`;
+      const endDate = new Date(zonedDate.getTime() + apt.durationMinutes * 60000);
+      endTime = format(endDate, 'HH:mm', { timeZone });
     }
-    
+
     return {
       ...apt,
       time: startTime,
       endTime: endTime,
-      date: apt.appointmentDate // Keep both for compatibility
+      // The date part must also be derived from the zoned time to avoid day-boundary issues
+      date: format(zonedDate, 'yyyy-MM-dd', { timeZone }),
+      appointmentDate: apt.appointmentDate // Keep original UTC string
     };
   };
 
@@ -129,11 +129,17 @@ const Calendar = () => {
       alert('Please select a valid client from the dropdown.');
       return;
     }
-    // Build payload
+    // Combine date and time strings from the form
+    const localDateTimeString = `${formData.date}T${formData.time}`;
+    
+    // Convert the local AEST time to a UTC Date object
+    const utcDate = zonedTimeToUtc(localDateTimeString, timeZone);
+
+    // Build payload with the UTC date
     const appointmentData = {
       title: formData.title,
       description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
-      appointmentDate: `${formData.date}T${formData.time}:00.000Z`,
+      appointmentDate: utcDate.toISOString(), // Send in ISO 8601 format
       durationMinutes: duration,
       customerId: Number(formData.customerId)
     };
@@ -198,8 +204,20 @@ const Calendar = () => {
   // Update appointment in secure API
   const handleUpdateAppointment = async (e) => {
     e.preventDefault();
+
+    // Combine date and time for UTC conversion
+    const localDateTimeString = `${formData.date}T${formData.time}`;
+    const utcDate = zonedTimeToUtc(localDateTimeString, timeZone);
+    const duration = calculateDurationMinutes(formData.time, formData.endTime);
+
+    const appointmentData = {
+      ...formData,
+      appointmentDate: utcDate.toISOString(),
+      durationMinutes: duration,
+    };
+
     try {
-      await appointmentsService.update(editingAppointment, formData);
+      await appointmentsService.update(editingAppointment, appointmentData);
       setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' });
       setEditingAppointment(null);
       setShowAddForm(false);
