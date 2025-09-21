@@ -25,7 +25,8 @@ const CRM = () => {
     state: '',
     zipCode: '',
     projectType: '',
-    notes: ''
+    notes: '',
+    password: '' // Added password field
   });
 
   // Check authentication on component mount
@@ -94,13 +95,19 @@ const CRM = () => {
       setSubmitting(false);
       return;
     }
+    if (!customerForm.password || customerForm.password.length < 6) {
+      setFormMessage({ type: 'error', text: 'Please enter a password (min 6 characters).' });
+      setSubmitting(false);
+      return;
+    }
     const customerData = {
       firstName: customerForm.firstName.trim(),
       lastName: customerForm.lastName.trim(),
       email: customerForm.email.trim(),
       phone: (customerForm.phone || '').trim() || null,
       company: (customerForm.companyName || '').trim() || null,
-      address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
+      address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null,
+      password: customerForm.password // Include password in payload
     };
     try {
       const result = await customersService.create(customerData);
@@ -115,7 +122,8 @@ const CRM = () => {
         state: '',
         zipCode: '',
         projectType: '',
-        notes: ''
+        notes: '',
+        password: '' // Reset password field
       });
       setShowCustomerForm(false);
       const response = await customersService.getAll();
@@ -126,7 +134,7 @@ const CRM = () => {
     } catch (error) {
       let errorMessage = 'Failed to add customer. ';
       if (error.message.includes('Validation failed')) {
-        errorMessage += 'Please check all required fields are filled correctly. Make sure you have entered both first and last name, and a valid email address.';
+        errorMessage += 'Please check all required fields are filled correctly. Make sure you have entered both first and last name, a valid email address, and a password.';
       } else if (error.message.includes('already exists')) {
         errorMessage += 'A customer with this email already exists.';
       } else {
@@ -366,6 +374,7 @@ const CRM = () => {
                 <input type="text" placeholder="First Name" value={customerForm.firstName} onChange={e => setCustomerForm({ ...customerForm, firstName: e.target.value })} required />
                 <input type="text" placeholder="Last Name" value={customerForm.lastName} onChange={e => setCustomerForm({ ...customerForm, lastName: e.target.value })} required />
                 <input type="email" placeholder="Email Address" value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} required />
+                <input type="password" placeholder="Password (min 6 chars)" value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} required />
                 <input type="tel" placeholder="Phone Number" value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} />
                 <input type="text" placeholder="Street Address" value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} />
                 <input type="text" placeholder="City" value={customerForm.city} onChange={e => setCustomerForm({ ...customerForm, city: e.target.value })} />
