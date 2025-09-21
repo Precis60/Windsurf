@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { zonedTimeToUtc, utcToZonedTime, format } from 'date-fns-tz';
 import { appointmentsService, authService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import CustomConfirmModal from '../components/CustomConfirmModal';
@@ -61,26 +60,26 @@ const Calendar = () => {
   const transformAppointment = (apt) => {
     if (!apt.appointmentDate) return apt;
 
-    // Treat the backend date string as UTC and convert it to a zoned time object for AEST
-    const zonedDate = utcToZonedTime(apt.appointmentDate, timeZone);
+    const utcDate = new Date(apt.appointmentDate);
 
-    // Format the start time in AEST
-    const startTime = format(zonedDate, 'HH:mm', { timeZone });
+    // Get AEST date string (e.g., "2025-09-21")
+    const date = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(utcDate);
+    
+    // Get AEST time string (e.g., "14:30")
+    const startTime = new Intl.DateTimeFormat('en-AU', { timeZone, hour: '2-digit', minute: '2-digit', hour12: false }).format(utcDate);
 
-    // Calculate end time
     let endTime = startTime;
     if (apt.durationMinutes) {
-      const endDate = new Date(zonedDate.getTime() + apt.durationMinutes * 60000);
-      endTime = format(endDate, 'HH:mm', { timeZone });
+      const endDate = new Date(utcDate.getTime() + apt.durationMinutes * 60000);
+      endTime = new Intl.DateTimeFormat('en-AU', { timeZone, hour: '2-digit', minute: '2-digit', hour12: false }).format(endDate);
     }
 
     return {
       ...apt,
       time: startTime,
       endTime: endTime,
-      // The date part must also be derived from the zoned time to avoid day-boundary issues
-      date: format(zonedDate, 'yyyy-MM-dd', { timeZone }),
-      appointmentDate: apt.appointmentDate // Keep original UTC string
+      date: date,
+      appointmentDate: apt.appointmentDate
     };
   };
 
@@ -129,17 +128,15 @@ const Calendar = () => {
       alert('Please select a valid client from the dropdown.');
       return;
     }
-    // Combine date and time strings from the form
-    const localDateTimeString = `${formData.date}T${formData.time}`;
-    
-    // Convert the local AEST time to a UTC Date object
-    const utcDate = zonedTimeToUtc(localDateTimeString, timeZone);
+    // Create a date string that is explicitly in the AEST time zone
+    const localDateTimeString = `${formData.date}T${formData.time}:00`;
+    const aestDate = new Date(localDateTimeString);
 
-    // Build payload with the UTC date
+    // Build payload with the UTC date by getting the ISO string
     const appointmentData = {
       title: formData.title,
       description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
-      appointmentDate: utcDate.toISOString(), // Send in ISO 8601 format
+      appointmentDate: aestDate.toISOString(),
       durationMinutes: duration,
       customerId: Number(formData.customerId)
     };
@@ -205,14 +202,14 @@ const Calendar = () => {
   const handleUpdateAppointment = async (e) => {
     e.preventDefault();
 
-    // Combine date and time for UTC conversion
-    const localDateTimeString = `${formData.date}T${formData.time}`;
-    const utcDate = zonedTimeToUtc(localDateTimeString, timeZone);
+    // Create a date string that is explicitly in the AEST time zone
+    const localDateTimeString = `${formData.date}T${formData.time}:00`;
+    const aestDate = new Date(localDateTimeString);
     const duration = calculateDurationMinutes(formData.time, formData.endTime);
 
     const appointmentData = {
       ...formData,
-      appointmentDate: utcDate.toISOString(),
+      appointmentDate: aestDate.toISOString(),
       durationMinutes: duration,
     };
 
@@ -258,33 +255,23 @@ const Calendar = () => {
 
   // Get appointments for a specific date, ensuring time zone correctness
   const getAppointmentsForDate = (date) => {
-    // The 'date' from the calendar grid is a local date. Format it to an AEST date string.
-    const calendarDateStr = format(utcToZonedTime(date, timeZone), 'yyyy-MM-dd');
+    // Format the calendar grid's date to an AEST date string (e.g., "2025-09-21")
+    const calendarDateStr = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date);
 
-    const filtered = appointments.filter(apt => {
-      // The appointment's 'date' field is already a pre-formatted AEST date string from our transform function.
-      if (!apt.date) {
-        return false;
-      }
-      return apt.date === calendarDateStr;
-    });
-
-    return filtered;
+    return appointments.filter(apt => apt.date === calendarDateStr);
   };
 
   // Generate calendar days for monthly view, AEST-aware
   const generateMonthlyCalendar = () => {
-    const zonedCurrentDate = utcToZonedTime(currentDate, timeZone);
-    const year = zonedCurrentDate.getFullYear();
-    const month = zonedCurrentDate.getMonth();
+    // Get year and month in AEST
+    const year = Number(new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric' }).format(currentDate));
+    const month = Number(new Intl.DateTimeFormat('en-US', { timeZone, month: 'numeric' }).format(currentDate)) - 1;
 
-    // Get the first day of the month in AEST
-    let firstDayOfMonth = new Date(Date.UTC(year, month, 1));
-    firstDayOfMonth = utcToZonedTime(firstDayOfMonth, timeZone);
+    const firstDayOfMonth = new Date(year, month, 1);
+    const startDayOfWeek = firstDayOfMonth.getDay(); // 0=Sun, 1=Mon, etc.
 
-    // Find the start of the calendar grid (could be in the previous month)
     let startDate = new Date(firstDayOfMonth);
-    startDate.setDate(startDate.getDate() - firstDayOfMonth.getDay());
+    startDate.setDate(startDate.getDate() - startDayOfWeek);
 
     const days = [];
     for (let i = 0; i < 42; i++) {
@@ -297,11 +284,9 @@ const Calendar = () => {
 
   // Generate week days for weekly view, AEST-aware
   const generateWeeklyCalendar = () => {
-    const zonedCurrentDate = utcToZonedTime(currentDate, timeZone);
-    
-    // Find the start of the week in AEST
-    const startOfWeek = new Date(zonedCurrentDate);
-    startOfWeek.setDate(zonedCurrentDate.getDate() - zonedCurrentDate.getDay());
+    const dayOfWeek = currentDate.getDay(); // 0=Sun, 1=Mon, etc.
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(currentDate.getDate() - dayOfWeek);
 
     const days = [];
     for (let i = 0; i < 7; i++) {
@@ -498,9 +483,9 @@ const Calendar = () => {
         <div className="calendar-nav-header">
           <button onClick={() => navigateDate(-1)} className="calendar-nav-btn">‹ Previous</button>
           <h3 className="calendar-nav-title">
-            {currentView === 'monthly' && format(utcToZonedTime(currentDate, timeZone), 'MMMM yyyy', { timeZone })}
-            {currentView === 'weekly' && `Week of ${format(utcToZonedTime(currentDate, timeZone), 'MMM d, yyyy', { timeZone })}`}
-            {currentView === 'daily' && format(utcToZonedTime(currentDate, timeZone), 'eeee, MMMM d, yyyy', { timeZone })}
+            {currentView === 'monthly' && new Intl.DateTimeFormat('en-AU', { timeZone, month: 'long', year: 'numeric' }).format(currentDate)}
+            {currentView === 'weekly' && `Week of ${new Intl.DateTimeFormat('en-AU', { timeZone, month: 'short', day: 'numeric', year: 'numeric' }).format(currentDate)}`}
+            {currentView === 'daily' && new Intl.DateTimeFormat('en-AU', { timeZone, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(currentDate)}
           </h3>
           <button onClick={() => navigateDate(1)} className="calendar-nav-btn">Next ›</button>
           <div className="calendar-view-switcher">
