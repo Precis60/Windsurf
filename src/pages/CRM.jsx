@@ -16,7 +16,8 @@ const CRM = () => {
   const [formMessage, setFormMessage] = useState({ type: '', text: '' });
   const [customerForm, setCustomerForm] = useState({
     companyName: '',
-    contactName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     address: '',
@@ -69,57 +70,44 @@ const CRM = () => {
   // Customer Database functions
   const handleAddCustomer = async (e) => {
     e && e.preventDefault && e.preventDefault();
-    console.log('=== HANDLE ADD CUSTOMER CALLED ===');
-    console.log('Event:', e);
-    console.log('Form data:', customerForm);
-    console.log('Authentication status:', authService.isAuthenticated());
-    console.log('Current user:', authService.getCurrentUser());
-    console.log('Local Storage Token:', localStorage.getItem('authToken'));
     setFormMessage({ type: '', text: '' });
     setSubmitting(true);
-    
     // Frontend validation
-    if (!customerForm.contactName.trim()) {
-      setFormMessage({ type: 'error', text: 'Please enter a contact name.' });
+    if (!customerForm.firstName.trim()) {
+      setFormMessage({ type: 'error', text: 'Please enter a first name.' });
       setSubmitting(false);
       return;
     }
-    
+    if (!customerForm.lastName.trim()) {
+      setFormMessage({ type: 'error', text: 'Please enter a last name.' });
+      setSubmitting(false);
+      return;
+    }
     if (!customerForm.email.trim()) {
       setFormMessage({ type: 'error', text: 'Please enter an email address.' });
       setSubmitting(false);
       return;
     }
-    
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customerForm.email.trim())) {
       setFormMessage({ type: 'error', text: 'Please enter a valid email address.' });
       setSubmitting(false);
       return;
     }
-    // Prepare payload outside try so it's available for error logging
-    const nameParts = customerForm.contactName.trim().split(' ');
-    const firstName = nameParts[0] || 'Customer';
-    const lastName = nameParts.slice(1).join(' ') || 'User';
     const customerData = {
-      firstName: firstName,
-      lastName: lastName,
+      firstName: customerForm.firstName.trim(),
+      lastName: customerForm.lastName.trim(),
       email: customerForm.email.trim(),
       phone: (customerForm.phone || '').trim() || null,
       company: (customerForm.companyName || '').trim() || null,
       address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
     };
-    
     try {
-      console.log('Sending customer data to backend:', customerData);
-      console.log('Before API call - waiting for response...');
       const result = await customersService.create(customerData);
-      console.log('Customer created successfully - API response received:', result);
-      
       setCustomerForm({
         companyName: '',
-        contactName: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phone: '',
         address: '',
@@ -130,54 +118,20 @@ const CRM = () => {
         notes: ''
       });
       setShowCustomerForm(false);
-      
-      // Reload customers
       const response = await customersService.getAll();
       const customerList = Array.isArray(response) ? response : response.customers || [];
       setCustomers(customerList);
-      
       setFormMessage({ type: 'success', text: 'Customer added successfully!' });
       setSubmitting(false);
     } catch (error) {
-      console.error('Detailed error adding customer:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Full error object:', JSON.stringify(error, null, 2));
-      
       let errorMessage = 'Failed to add customer. ';
-      
-      // Check for specific error types
-      if (error.message.includes('Authentication required')) {
-        errorMessage += 'Please log in again.';
-        setFormMessage({ type: 'error', text: errorMessage });
-        setSubmitting(false);
-        setTimeout(() => { window.location.href = '/login'; }, 500);
-        return;
-      } else if (error.message.includes('Session expired')) {
-        errorMessage += 'Your session has expired. Please log in again.';
-        setFormMessage({ type: 'error', text: errorMessage });
-        setSubmitting(false);
-        setTimeout(() => { window.location.href = '/login'; }, 500);
-        return;
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        errorMessage += 'Network error - backend server may not be running. Please check if the backend is started.';
-      } else if (error.message.includes('Validation failed')) {
+      if (error.message.includes('Validation failed')) {
         errorMessage += 'Please check all required fields are filled correctly. Make sure you have entered both first and last name, and a valid email address.';
       } else if (error.message.includes('already exists')) {
         errorMessage += 'A customer with this email already exists.';
       } else {
         errorMessage += `Error: ${error.message}`;
       }
-      
-      // Show detailed error in console for debugging
-      console.log('=== CUSTOMER CREATION ERROR DEBUG ===');
-      console.log('Customer data being sent:', customerData);
-      console.log('Error type:', typeof error);
-      console.log('Error constructor:', error.constructor.name);
-      console.log('Is network error:', error.message.includes('Failed to fetch'));
-      console.log('Current auth status:', authService.isAuthenticated());
-      console.log('=====================================');
-      
       setFormMessage({ type: 'error', text: errorMessage });
       setSubmitting(false);
     }
@@ -188,8 +142,13 @@ const CRM = () => {
     console.log('Attempting to update customer with data:', customerForm);
     
     // Frontend validation
-    if (!customerForm.contactName.trim()) {
-      alert('Please enter a contact name.');
+    if (!customerForm.firstName.trim()) {
+      alert('Please enter a first name.');
+      return;
+    }
+    
+    if (!customerForm.lastName.trim()) {
+      alert('Please enter a last name.');
       return;
     }
     
@@ -207,13 +166,9 @@ const CRM = () => {
     
     try {
       // Convert frontend form data to backend expected format
-      const nameParts = customerForm.contactName.trim().split(' ');
-      const firstName = nameParts[0] || 'Customer';
-      const lastName = nameParts.slice(1).join(' ') || 'User';
-      
       const customerData = {
-        firstName: firstName,
-        lastName: lastName,
+        firstName: customerForm.firstName.trim(),
+        lastName: customerForm.lastName.trim(),
         email: customerForm.email.trim(),
         phone: customerForm.phone.trim() || null,
         company: customerForm.companyName.trim() || null,
@@ -226,7 +181,8 @@ const CRM = () => {
       
       setCustomerForm({
         companyName: '',
-        contactName: '',
+        firstName: '',
+        lastName: '',
         email: '',
         phone: '',
         address: '',
@@ -284,7 +240,8 @@ const CRM = () => {
     
     setCustomerForm({
       companyName: customer.company || '',
-      contactName: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
+      firstName: customer.firstName || '',
+      lastName: customer.lastName || '',
       email: customer.email || '',
       phone: customer.phone || '',
       address: address,
@@ -375,7 +332,7 @@ const CRM = () => {
           <button className="crm-btn-main" onClick={() => { setShowCustomerList(!showCustomerList); setShowCustomerForm(false); setEditingCustomer(null); }}>
             {showCustomerList ? 'Hide Customers' : 'View Customers'}
           </button>
-          <button className="crm-btn-secondary" onClick={() => { setShowCustomerForm(true); setShowCustomerList(false); setEditingCustomer(null); setCustomerForm({ companyName: '', contactName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', projectType: '', notes: '' }); }}>
+          <button className="crm-btn-secondary" onClick={() => { setShowCustomerForm(true); setShowCustomerList(false); setEditingCustomer(null); setCustomerForm({ companyName: '', firstName: '', lastName: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', projectType: '', notes: '' }); }}>
             Add Customer
           </button>
         </div>
@@ -406,7 +363,8 @@ const CRM = () => {
               <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>{editingCustomer ? 'Edit Customer' : 'Add New Customer'}</h3>
               <form onSubmit={editingCustomer ? handleUpdateCustomer : handleAddCustomer} noValidate>
                 <input type="text" placeholder="Company Name" value={customerForm.companyName} onChange={e => setCustomerForm({ ...customerForm, companyName: e.target.value })} />
-                <input type="text" placeholder="Contact Name" value={customerForm.contactName} onChange={e => setCustomerForm({ ...customerForm, contactName: e.target.value })} required />
+                <input type="text" placeholder="First Name" value={customerForm.firstName} onChange={e => setCustomerForm({ ...customerForm, firstName: e.target.value })} required />
+                <input type="text" placeholder="Last Name" value={customerForm.lastName} onChange={e => setCustomerForm({ ...customerForm, lastName: e.target.value })} required />
                 <input type="email" placeholder="Email Address" value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} required />
                 <input type="tel" placeholder="Phone Number" value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} />
                 <input type="text" placeholder="Street Address" value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} />
