@@ -5,6 +5,45 @@ const Portal = () => {
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showRegister, setShowRegister] = useState(false);
+  const [registerForm, setRegisterForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setMessage({ type: '', text: '' });
+
+    if (registerForm.password !== registerForm.confirmPassword) {
+      setMessage({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+
+    try {
+      await authService.register({
+        firstName: registerForm.firstName,
+        lastName: registerForm.lastName,
+        email: registerForm.email,
+        password: registerForm.password
+      });
+
+      setMessage({ type: 'success', text: 'Registration successful! You can now log in.' });
+      setRegisterForm({ firstName: '', lastName: '', email: '', password: '', confirmPassword: '' });
+      setShowRegister(false);
+      // Optional: redirect to login or show a clear message
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
+
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Registration failed. Please try again.' });
+    }
+  };
 
   // Check authentication on component mount
   useEffect(() => {
@@ -18,6 +57,14 @@ const Portal = () => {
   }, []);
 
   // Button styles
+  const inputStyle = {
+    padding: '10px',
+    borderRadius: '4px',
+    border: '1px solid #ccc',
+    width: '100%',
+    boxSizing: 'border-box'
+  };
+
   const buttonStyle = {
     background: '#22314a',
     color: 'white',
@@ -87,7 +134,42 @@ const Portal = () => {
           >
             Go to Login Page
           </a>
+
+          <div style={{ marginTop: '2rem', fontSize: '14px' }}>
+            <p>Don't have an account? <span onClick={() => setShowRegister(true)} style={{ color: '#007bff', cursor: 'pointer', textDecoration: 'underline' }}>Create one here</span>.</p>
+          </div>
+
         </div>
+
+        {showRegister && (
+          <div style={{ background: '#fff', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', marginTop: '2rem' }}>
+            <h2 style={{ color: '#22314a', marginBottom: '1.5rem', textAlign: 'center' }}>Create New Account</h2>
+            <form onSubmit={handleRegister}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <input type="text" placeholder="First Name" value={registerForm.firstName} onChange={e => setRegisterForm({ ...registerForm, firstName: e.target.value })} required style={inputStyle} />
+                <input type="text" placeholder="Last Name" value={registerForm.lastName} onChange={e => setRegisterForm({ ...registerForm, lastName: e.target.value })} required style={inputStyle} />
+              </div>
+              <input type="email" placeholder="Email Address" value={registerForm.email} onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })} required style={{...inputStyle, width: 'calc(100% - 20px)', marginTop: '1rem'}} />
+              <input type="password" placeholder="Password (min 8 characters)" value={registerForm.password} onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })} required style={{...inputStyle, width: 'calc(100% - 20px)', marginTop: '1rem'}} />
+              <input type="password" placeholder="Confirm Password" value={registerForm.confirmPassword} onChange={e => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })} required style={{...inputStyle, width: 'calc(100% - 20px)', marginTop: '1rem'}} />
+              
+              {message.text && (
+                <div style={{ 
+                  marginTop: '1rem', 
+                  padding: '10px', 
+                  borderRadius: '4px', 
+                  backgroundColor: message.type === 'error' ? '#f8d7da' : '#d4edda', 
+                  color: message.type === 'error' ? '#721c24' : '#155724' 
+                }}>
+                  {message.text}
+                </div>
+              )}
+
+              <button type="submit" style={{...buttonStyle, width: '100%', marginTop: '1.5rem'}}>Create Account</button>
+            </form>
+          </div>
+        )}
+
       </div>
     );
   }
