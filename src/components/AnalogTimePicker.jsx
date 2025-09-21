@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const AnalogTimePicker = ({ value, onChange, label }) => {
+const AnalogTimePicker = ({ value, onChange, label, compact = false }) => {
   const [mode, setMode] = useState('hour'); // 'hour' or 'minute'
   const clockRef = useRef(null);
   
@@ -86,19 +86,23 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
     }
   }
   
+  const clockSize = compact ? 120 : 200;
+  const containerLayout = compact ? 'column' : 'row';
+  const containerGap = compact ? '0.5rem' : '1rem';
+
   return (
-    <div style={{ margin: '1rem 0' }}>
+    <div style={{ margin: compact ? '0.5rem 0' : '1rem 0' }}>
       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold', color: '#333' }}>
         {label}
       </label>
       
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: containerLayout, alignItems: 'center', gap: containerGap }}>
         {/* Analog Clock */}
         <div style={{ position: 'relative' }}>
           <svg
             ref={clockRef}
-            width="200"
-            height="200"
+            width={clockSize}
+            height={clockSize}
             viewBox="0 0 100 100"
             onClick={handleClockClick}
             style={{
@@ -160,26 +164,26 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
         </div>
         
         {/* Digital display and AM/PM toggle */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? '0.5rem' : '1rem' }}>
           {/* Digital time display */}
           <div style={{
             background: '#f8f9fa',
             border: '2px solid #22314a',
             borderRadius: '8px',
-            padding: '1rem',
+            padding: compact ? '0.5rem' : '1rem',
             textAlign: 'center',
-            minWidth: '120px'
+            minWidth: compact ? '100px' : '120px'
           }}>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#22314a', fontFamily: 'monospace' }}>
+            <div style={{ fontSize: compact ? '18px' : '24px', fontWeight: 'bold', color: '#22314a', fontFamily: 'monospace' }}>
               {displayHours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')}
             </div>
-            <div style={{ fontSize: '14px', color: '#666', marginTop: '0.25rem' }}>
+            <div style={{ fontSize: compact ? '12px' : '14px', color: '#666', marginTop: '0.25rem' }}>
               {hours >= 12 ? 'PM' : 'AM'}
             </div>
           </div>
           
           {/* AM/PM Toggle */}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.25rem' }}>
             <button
               type="button"
               onClick={() => {
@@ -187,13 +191,13 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
                 onChange(`${newHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
               }}
               style={{
-                padding: '0.5rem 1rem',
+                padding: compact ? '0.25rem 0.5rem' : '0.5rem 1rem',
                 border: '2px solid #22314a',
                 borderRadius: '4px',
                 background: hours < 12 ? '#22314a' : 'white',
                 color: hours < 12 ? 'white' : '#22314a',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: compact ? '12px' : '14px',
                 fontWeight: 'bold'
               }}
             >
@@ -206,13 +210,13 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
                 onChange(`${newHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
               }}
               style={{
-                padding: '0.5rem 1rem',
+                padding: compact ? '0.25rem 0.5rem' : '0.5rem 1rem',
                 border: '2px solid #22314a',
                 borderRadius: '4px',
                 background: hours >= 12 ? '#22314a' : 'white',
                 color: hours >= 12 ? 'white' : '#22314a',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: compact ? '12px' : '14px',
                 fontWeight: 'bold'
               }}
             >
@@ -221,48 +225,50 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
           </div>
           
           {/* Mode Toggle */}
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.25rem' }}>
             <button
               type="button"
               onClick={() => setMode('hour')}
               style={{
-                padding: '0.5rem 1rem',
+                padding: compact ? '0.25rem 0.5rem' : '0.5rem 1rem',
                 border: '2px solid #22314a',
                 borderRadius: '4px',
                 background: mode === 'hour' ? '#22314a' : 'white',
                 color: mode === 'hour' ? 'white' : '#22314a',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: compact ? '12px' : '14px',
                 fontWeight: 'bold'
               }}
             >
-              Hours
+              {compact ? 'H' : 'Hours'}
             </button>
             <button
               type="button"
               onClick={() => setMode('minute')}
               style={{
-                padding: '0.5rem 1rem',
+                padding: compact ? '0.25rem 0.5rem' : '0.5rem 1rem',
                 border: '2px solid #dc3545',
                 borderRadius: '4px',
                 background: mode === 'minute' ? '#dc3545' : 'white',
                 color: mode === 'minute' ? 'white' : '#dc3545',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: compact ? '12px' : '14px',
                 fontWeight: 'bold'
               }}
             >
-              Minutes
+              {compact ? 'M' : 'Minutes'}
             </button>
           </div>
           
-          {/* Instructions */}
-          <div style={{ fontSize: '12px', color: '#666', maxWidth: '150px', lineHeight: '1.4', textAlign: 'center' }}>
-            <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: mode === 'hour' ? '#22314a' : '#dc3545' }}>
-              {mode === 'hour' ? 'Setting Hours' : 'Setting Minutes'}
+          {!compact && (
+            /* Instructions */
+            <div style={{ fontSize: '12px', color: '#666', maxWidth: '150px', lineHeight: '1.4', textAlign: 'center' }}>
+              <div style={{ marginBottom: '0.5rem', fontWeight: 'bold', color: mode === 'hour' ? '#22314a' : '#dc3545' }}>
+                {mode === 'hour' ? 'Setting Hours' : 'Setting Minutes'}
+              </div>
+              <div>Click anywhere on the clock face to set the {mode === 'hour' ? 'hour' : 'minute'}</div>
             </div>
-            <div>Click anywhere on the clock face to set the {mode === 'hour' ? 'hour' : 'minute'}</div>
-          </div>
+          )}
         </div>
       </div>
     </div>

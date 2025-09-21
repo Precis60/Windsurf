@@ -135,7 +135,7 @@ const ClientPortal = () => {
           {/* Top Section - Forms */}
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', 
             gap: '2rem', 
             marginBottom: '3rem' 
           }}>
@@ -235,9 +235,19 @@ const ClientPortal = () => {
                     style={{ width: '100%', boxSizing: 'border-box' }}
                   />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                  <AnalogTimePicker label="Start Time" value={form.time} onChange={time => setForm({ ...form, time })} />
-                  <AnalogTimePicker label="End Time" value={form.endTime} onChange={time => setForm({ ...form, endTime: time })} />
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: '1fr 1fr', 
+                  gap: '1rem', 
+                  marginBottom: '1rem',
+                  overflow: 'hidden' 
+                }}>
+                  <div style={{ overflow: 'hidden' }}>
+                    <AnalogTimePicker label="Start Time" value={form.time} onChange={time => setForm({ ...form, time })} compact={true} />
+                  </div>
+                  <div style={{ overflow: 'hidden' }}>
+                    <AnalogTimePicker label="End Time" value={form.endTime} onChange={time => setForm({ ...form, endTime: time })} compact={true} />
+                  </div>
                 </div>
                 <div style={{ marginBottom: '1.5rem' }}>
                   <AddressAutocomplete 
@@ -258,7 +268,7 @@ const ClientPortal = () => {
           {/* Bottom Section - Your Items */}
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', 
             gap: '2rem' 
           }}>
             {/* Support Tickets */}
