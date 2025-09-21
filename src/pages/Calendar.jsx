@@ -1,5 +1,5 @@
   import React, { useState, useEffect } from "react";
-import { appointmentsService, authService, calendarService } from '../services/secureApi';
+import { appointmentsService, authService, calendarService, appointmentRequestService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import AddressAutocomplete from '../components/AddressAutocomplete';
 import CustomConfirmModal from '../components/CustomConfirmModal';
@@ -20,6 +20,8 @@ const Calendar = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [pendingRequests, setPendingRequests] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     date: '',
@@ -121,11 +123,43 @@ const Calendar = () => {
             setNotice({ type: 'error', message: 'Your session has expired. Please log in again to load customers.' });
           }
         }
+
+        // Load pending appointment requests for staff/admin
+        try {
+          const current = authService.getCurrentUser?.();
+          if (current && (current.role === 'admin' || current.role === 'staff')) {
+            setPendingLoading(true);
+            const r = await appointmentRequestService.getAll('?status=pending');
+            const list = Array.isArray(r) ? r : r.requests || [];
+            setPendingRequests(list);
+          } else {
+            setPendingRequests([]);
+          }
+        } catch (e) {
+          console.error('Error loading pending requests:', e);
+          setPendingRequests([]);
+        } finally {
+          setPendingLoading(false);
+        }
       };
       
       loadData();
     }
   }, [isAuthenticated]);
+
+  // Poll pending requests count every 60s for staff/admin
+  useEffect(() => {
+    const current = authService.getCurrentUser?.();
+    if (!(current && (current.role === 'admin' || current.role === 'staff'))) return;
+    const timer = setInterval(async () => {
+      try {
+        const r = await appointmentRequestService.getAll('?status=pending');
+        const list = Array.isArray(r) ? r : r.requests || [];
+        setPendingRequests(list);
+      } catch {}
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Add new appointment to secure API
   const handleAddAppointment = async (e) => {
@@ -412,6 +446,75 @@ const Calendar = () => {
         </div>
       )}
       <div className="calendar-dashboard">
+        {/* Pending Appointment Requests (staff/admin only) */}
+        {(() => {
+          const current = authService.getCurrentUser?.();
+          if (!(current && (current.role === 'admin' || current.role === 'staff'))) return null;
+          return (
+            <div className="calendar-card" style={{ width: '100%' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3>Pending Appointment Requests</h3>
+                <button className="calendar-btn-secondary" type="button" onClick={async () => {
+                  try {
+                    setPendingLoading(true);
+                    const r = await appointmentRequestService.getAll('?status=pending');
+                    const list = Array.isArray(r) ? r : r.requests || [];
+                    setPendingRequests(list);
+                  } finally { setPendingLoading(false); }
+                }}>Refresh</button>
+              </div>
+              {pendingLoading ? (
+                <div style={{ color: '#666' }}>Loading...</div>
+              ) : pendingRequests.length === 0 ? (
+                <div style={{ color: '#666' }}>No pending requests.</div>
+              ) : (
+                <div style={{ display: 'grid', gap: 8 }}>
+                  {pendingRequests.slice(0, 5).map((r) => (
+                    <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid #eee' }}>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{r.title}</div>
+                        <div style={{ fontSize: 12, color: '#666' }}>{new Date(r.requestedDate).toLocaleString('en-AU')}{r.address ? ` • ${r.address}` : ''}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button className="calendar-btn-secondary" type="button" onClick={async () => {
+                          try {
+                            await appointmentRequestService.update(r.id, { status: 'approved', createAppointment: true });
+                            const resp = await appointmentRequestService.getAll('?status=pending');
+                            const list = Array.isArray(resp) ? resp : resp.requests || [];
+                            setPendingRequests(list);
+                            // Reload appointments to show newly created one
+                            const response = await appointmentsService.getAll();
+                            const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+                            setAppointments(appointmentList.map(transformAppointment));
+                          } catch (e) { alert('Failed to approve.'); }
+                        }}>Approve & Create</button>
+                        <button className="calendar-btn-secondary" type="button" onClick={async () => {
+                          try {
+                            await appointmentRequestService.update(r.id, { status: 'approved', createAppointment: false });
+                            const resp = await appointmentRequestService.getAll('?status=pending');
+                            const list = Array.isArray(resp) ? resp : resp.requests || [];
+                            setPendingRequests(list);
+                          } catch (e) { alert('Failed to approve.'); }
+                        }}>Approve Only</button>
+                        <button className="calendar-btn-secondary" type="button" onClick={async () => {
+                          try {
+                            await appointmentRequestService.update(r.id, { status: 'declined' });
+                            const resp = await appointmentRequestService.getAll('?status=pending');
+                            const list = Array.isArray(resp) ? resp : resp.requests || [];
+                            setPendingRequests(list);
+                          } catch (e) { alert('Failed to decline.'); }
+                        }}>Decline</button>
+                      </div>
+                    </div>
+                  ))}
+                  {pendingRequests.length > 5 && (
+                    <div style={{ fontSize: 12, color: '#666' }}>+ {pendingRequests.length - 5} more pending...</div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
         <div className="calendar-card">
           <h3>Appointment Management</h3>
           <p>View and manage appointments, clients, and schedules.</p>
