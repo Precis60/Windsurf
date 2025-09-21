@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { appointmentsService, authService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
+import './Calendar.css';
 
 const Calendar = () => {
   // Authentication state
@@ -268,448 +269,263 @@ const Calendar = () => {
     return slots;
   };
 
-  const buttonStyle = {
-    background: '#22314a',
-    color: 'white',
-    border: 'none',
-    padding: '0.75rem 1.5rem',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    margin: '0 0.5rem'
-  };
-
-  const activeButtonStyle = {
-    ...buttonStyle,
-    background: '#1a2538'
-  };
-
   // If loading, show loading state
   if (loading) {
     return (
-      <div className="page-content" style={{ 
-        padding: '2rem', 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '50vh' 
-      }}>
-        <div style={{ textAlign: 'center', color: '#666' }}>
-          <h2>Loading Calendar...</h2>
-          <p>Please wait while we load your calendar data.</p>
-        </div>
+      <div className="calendar-container" style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h2>Loading Calendar...</h2>
       </div>
     );
   }
-
   // If not authenticated, show message to login
   if (!isAuthenticated) {
     return (
-      <div className="page-content" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-        <div style={{ background: '#f8f9fa', padding: '2rem', borderRadius: '8px', border: '1px solid #e9ecef', textAlign: 'center' }}>
-          <h1 style={{ color: '#22314a', marginBottom: '1rem' }}>🔒 Calendar Access Required</h1>
-          <p style={{ marginBottom: '2rem', fontSize: '1.1rem', color: '#666' }}>
-            Please log in to access the secure calendar management system.
-          </p>
-          
-          <div style={{
-            background: '#e8f5e8',
-            border: '1px solid #4caf50',
-            borderRadius: '8px',
-            padding: '20px',
-            marginBottom: '20px'
-          }}>
-            <p style={{ 
-              margin: 0, 
-              color: '#2e7d32',
-              fontSize: '14px'
-            }}>
-              🔐 <strong>Secure Access:</strong> This calendar contains sensitive business information and requires authentication.
-            </p>
-          </div>
-
-          <a 
-            href="/login" 
-            style={{
-              background: '#22314a',
-              color: 'white',
-              padding: '12px 24px',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontSize: '16px',
-              fontWeight: '500',
-              display: 'inline-block'
-            }}
-          >
-            Go to Login Page
-          </a>
+      <div className="calendar-container">
+        <div className="calendar-card" style={{ maxWidth: 500, margin: '3rem auto', textAlign: 'center' }}>
+          <h1 className="calendar-title">🔒 Calendar Access Required</h1>
+          <p style={{ color: '#666', marginBottom: 24 }}>Please log in to access the calendar system.</p>
+          <a href="/login" className="calendar-btn-main">Go to Login Page</a>
         </div>
       </div>
     );
   }
-
   return (
-    <div className="page-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={{ color: '#22314a', margin: 0 }}>Calendar Management</h1>
-        <button 
-          onClick={() => {
-            authService.logout();
-            setIsAuthenticated(false);
-            window.location.href = '/';
-          }} 
-          style={{...buttonStyle, background: '#dc3545'}}
-        >
-          Logout
-        </button>
+    <div className="calendar-container">
+      <div className="calendar-header">
+        <h1 className="calendar-title">Calendar Management</h1>
+        <button className="calendar-logout-btn" onClick={() => { authService.logout(); setIsAuthenticated(false); window.location.href = '/'; }}>Logout</button>
       </div>
-      <p style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>Manage appointments and view your schedule.</p>
-      
-      {/* View Toggle Buttons */}
-      <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
-        <button 
-          style={currentView === 'monthly' ? activeButtonStyle : buttonStyle}
-          onClick={() => setCurrentView('monthly')}
-        >
-          Monthly View
-        </button>
-        <button 
-          style={currentView === 'weekly' ? activeButtonStyle : buttonStyle}
-          onClick={() => setCurrentView('weekly')}
-        >
-          Weekly View
-        </button>
-        <button 
-          style={currentView === 'daily' ? activeButtonStyle : buttonStyle}
-          onClick={() => setCurrentView('daily')}
-        >
-          Daily View
-        </button>
-      </div>
-
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
-        {/* Add Appointment Section */}
-        <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef', width: '100%', maxWidth: '600px' }}>
-          <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>Appointment Management</h3>
-          <button 
-            style={buttonStyle}
-            onClick={() => {
-              setShowAddForm(!showAddForm);
-              setEditingAppointment(null);
-              setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' });
-            }}
-          >
+      <div className="calendar-dashboard">
+        <div className="calendar-card">
+          <h3>Appointment Management</h3>
+          <p>View and manage appointments, clients, and schedules.</p>
+          <button className="calendar-btn-main" onClick={() => { setShowAddForm(!showAddForm); setEditingAppointment(null); setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' }); }}>
             {showAddForm ? 'Cancel' : 'Add New Appointment'}
           </button>
-          
-          {showAddForm && (
-            <form onSubmit={e => {
-  e.preventDefault();
-  if (!formData.customerId) {
-    alert('Please select a valid client from the dropdown.');
-    return;
-  }
-  (editingAppointment ? handleUpdateAppointment : handleAddAppointment)(e);
-}} style={{ marginTop: '1rem' }}>
-              <input
-                type="text"
-                placeholder="Appointment Title"
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                required
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  placeholder="Select Client"
-                  value={clientSearch || formData.client}
-                  onChange={e => {
-                    setClientSearch(e.target.value);
-                    setShowClientDropdown(true);
-                    setFormData({ ...formData, client: e.target.value, customerId: '' });
-                  }}
-                  onBlur={() => {
-                    setTimeout(() => setShowClientDropdown(false), 200);
-                    // If the typed value does not match a customer, clear customerId
-                    const match = customers.find(c => `${c.firstName} ${c.lastName}`.toLowerCase() === clientSearch.toLowerCase());
-                    if (!match) setFormData(f => ({ ...f, customerId: '' }));
-                  }}
-                  onFocus={() => setShowClientDropdown(true)}
-                  autoComplete="off"
-                  required
-                  style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
-                />
-                {showClientDropdown && filteredCustomers.length > 0 && (
-                  <div style={{ position: 'absolute', zIndex: 10, background: 'white', border: '1px solid #ccc', width: '100%', maxHeight: 180, overflowY: 'auto', borderRadius: 4 }}>
-                    {filteredCustomers.map(c => (
-                      <div
-                        key={c.id}
-                        style={{ padding: '0.5rem', cursor: 'pointer', borderBottom: '1px solid #eee' }}
-                        onClick={() => {
-                          setFormData({ ...formData, client: `${c.firstName} ${c.lastName}`, customerId: c.id });
-                          setClientSearch(`${c.firstName} ${c.lastName}`);
-                          setShowClientDropdown(false);
-                        }}
-                      >
-                        {c.firstName} {c.lastName} {c.company ? `(${c.company})` : ''}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <input
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData({...formData, date: e.target.value})}
-                required
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <AnalogTimePicker
-                label="Start Time"
-                value={formData.time}
-                onChange={(time) => setFormData({...formData, time: time})}
-              />
-              <AnalogTimePicker
-                label="End Time"
-                value={formData.endTime}
-                onChange={(time) => setFormData({...formData, endTime: time})}
-              />
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-                required
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
-              >
-                <option value="">Select Category</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="Address/Location"
-                value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <textarea
-                placeholder="Description"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                style={{ width: '100%', padding: '0.5rem', margin: '0.25rem 0', borderRadius: '4px', border: '1px solid #ccc', minHeight: '60px' }}
-              />
-              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                <button type="submit" style={{...buttonStyle, flex: 1}}>
-                  {editingAppointment ? 'Update Appointment' : 'Add Appointment'}
-                </button>
-                {editingAppointment && (
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to delete this appointment?')) {
-                        handleDeleteAppointment(editingAppointment);
-                      }
-                    }}
-                    style={{
-                      ...buttonStyle, 
-                      background: '#dc3545', 
-                      flex: 1
-                    }}
-                  >
-                    Delete Appointment
-                  </button>
-                )}
-              </div>
-            </form>
-          )}
         </div>
+        {/* Optionally add more dashboard cards here */}
       </div>
-
-    {/* Calendar Template Views */}
-    <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-      {/* Navigation Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <button onClick={() => navigateDate(-1)} style={buttonStyle}>‹ Previous</button>
-        <h3 style={{ color: '#22314a', margin: 0 }}>
-          {currentView === 'monthly' && currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-          {currentView === 'weekly' && `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-          {currentView === 'daily' && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-        </h3>
-        <button onClick={() => navigateDate(1)} style={buttonStyle}>Next ›</button>
-      </div>
-
-      {/* Monthly Calendar Grid */}
-      {currentView === 'monthly' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px' }}>
-          {generateMonthlyCalendar().map((date, index) => {
-            const dayAppointments = getAppointmentsForDate(date);
-            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-            const isToday = date.toDateString() === new Date().toDateString();
-            return (
-              <div key={index} style={{
-                minHeight: '100px',
-                padding: '0.25rem',
-                background: isCurrentMonth ? 'white' : '#f8f9fa',
-                border: isToday ? '2px solid #22314a' : '1px solid #dee2e6',
-                opacity: isCurrentMonth ? 1 : 0.6
-              }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '0.25rem' }}>{date.getDate()}</div>
-                {dayAppointments.map(apt => (
-                  <div key={apt.id} style={{
-                    background: '#e3f2fd',
-                    padding: '2px 4px',
-                    margin: '1px 0',
-                    borderRadius: '3px',
-                    fontSize: '0.7rem',
-                    cursor: 'pointer',
-                    border: '1px solid #2196f3'
-                  }} onClick={() => {
-                    setFormData(apt);
-                    setEditingAppointment(apt.id);
-                    setShowAddForm(true);
-                  }}>
-                    <div style={{ fontWeight: 'bold' }}>{apt.time} - {apt.endTime} {apt.title}</div>
-                    <div>{apt.client}</div>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+      {/* Appointment Form Section */}
+      {showAddForm && (
+        <div className="calendar-section">
+          <h2 style={{ color: '#22314a', marginBottom: '1.5rem' }}>{editingAppointment ? 'Edit Appointment' : 'Add New Appointment'}</h2>
+          <form className="calendar-form" onSubmit={e => {
+            e.preventDefault();
+            if (!formData.customerId) {
+              alert('Please select a valid client from the dropdown.');
+              return;
+            }
+            (editingAppointment ? handleUpdateAppointment : handleAddAppointment)(e);
+          }} noValidate>
+            <input
+              type="text"
+              placeholder="Appointment Title"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              required
+              className="calendar-input"
+            />
+            <div className="calendar-client-select">
+              <input
+                type="text"
+                placeholder="Select Client"
+                value={clientSearch || formData.client}
+                onChange={e => {
+                  setClientSearch(e.target.value);
+                  setShowClientDropdown(true);
+                  setFormData({ ...formData, client: e.target.value, customerId: '' });
+                }}
+                onBlur={() => {
+                  setTimeout(() => setShowClientDropdown(false), 200);
+                  // If the typed value does not match a customer, clear customerId
+                  const match = customers.find(c => `${c.firstName} ${c.lastName}`.toLowerCase() === clientSearch.toLowerCase());
+                  if (!match) setFormData(f => ({ ...f, customerId: '' }));
+                }}
+                onFocus={() => setShowClientDropdown(true)}
+                autoComplete="off"
+                required
+                className="calendar-input"
+              />
+              {showClientDropdown && filteredCustomers.length > 0 && (
+                <div className="calendar-client-dropdown">
+                  {filteredCustomers.map(c => (
+                    <div
+                      key={c.id}
+                      className="calendar-client-option"
+                      onClick={() => {
+                        setFormData({ ...formData, client: `${c.firstName} ${c.lastName}`, customerId: c.id });
+                        setClientSearch(`${c.firstName} ${c.lastName}`);
+                        setShowClientDropdown(false);
+                      }}
+                    >
+                      {c.firstName} {c.lastName} {c.company ? `(${c.company})` : ''}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) => setFormData({...formData, date: e.target.value})}
+              required
+              className="calendar-input"
+            />
+            <AnalogTimePicker
+              label="Start Time"
+              value={formData.time}
+              onChange={(time) => setFormData({...formData, time: time})}
+            />
+            <AnalogTimePicker
+              label="End Time"
+              value={formData.endTime}
+              onChange={(time) => setFormData({...formData, endTime: time})}
+            />
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              required
+              className="calendar-select"
+            >
+              <option value="">Select Category</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
+            <input
+              type="text"
+              placeholder="Address/Location"
+              value={formData.address}
+              onChange={(e) => setFormData({...formData, address: e.target.value})}
+              className="calendar-input"
+            />
+            <textarea
+              placeholder="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="calendar-textarea"
+            />
+            <div className="calendar-form-actions">
+              <button className="calendar-btn-main" type="submit">{editingAppointment ? 'Update Appointment' : 'Add Appointment'}</button>
+              <button className="calendar-btn-secondary" type="button" onClick={() => { setShowAddForm(false); setEditingAppointment(null); }}>Cancel</button>
+            </div>
+          </form>
         </div>
       )}
+      {/* Calendar Views Section (monthly/weekly/daily) */}
+      <div className="calendar-section">
+        {/* Navigation Header */}
+        <div className="calendar-nav-header">
+          <button onClick={() => navigateDate(-1)} className="calendar-nav-btn">‹ Previous</button>
+          <h3 className="calendar-nav-title">
+            {currentView === 'monthly' && currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            {currentView === 'weekly' && `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+            {currentView === 'daily' && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </h3>
+          <button onClick={() => navigateDate(1)} className="calendar-nav-btn">Next ›</button>
+        </div>
 
-      {/* Weekly Calendar Grid */}
-      {currentView === 'weekly' && (
-        <div style={{ display: 'flex' }}>
-          {/* Time slots column */}
-          <div style={{ width: '80px', borderRight: '1px solid #dee2e6' }}>
-            <div style={{ height: '40px', borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}></div>
-            {generateTimeSlots().map((time, index) => (
-              <div key={time} style={{
-                height: '15px',
-                fontSize: '0.7rem',
-                padding: '0 0.25rem',
-                borderBottom: index % 4 === 3 ? '1px solid #ccc' : '1px solid #f0f0f0',
-                display: 'flex',
-                alignItems: 'center',
-                background: '#f8f9fa',
-                justifyContent: 'flex-end'
-              }}>
-                {index % 4 === 0 ? time : ''}
-              </div>
-            ))}
-          </div>
-          {/* Days grid */}
-          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '1px' }}>
-            {generateWeeklyCalendar().map((date, index) => {
+        {/* Monthly Calendar Grid */}
+        {currentView === 'monthly' && (
+          <div className="calendar-monthly-grid">
+            {generateMonthlyCalendar().map((date, index) => {
               const dayAppointments = getAppointmentsForDate(date);
+              const isCurrentMonth = date.getMonth() === currentDate.getMonth();
               const isToday = date.toDateString() === new Date().toDateString();
               return (
-                <div key={index} style={{
-                  background: 'white',
-                  border: '1px solid #dee2e6',
-                  position: 'relative'
-                }}>
-                  <div style={{ 
-                    height: '40px', 
-                    fontWeight: 'bold', 
-                    padding: '0.5rem', 
-                    textAlign: 'center',
-                    borderBottom: '1px solid #dee2e6',
-                    background: '#f8f9fa'
-                  }}>
-                    {date.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })}
-                  </div>
-                  <div style={{ height: `${15 * 96}px`, position: 'relative' }}>
-                    {generateTimeSlots().map((time, timeIndex) => (
-                      <div key={time} style={{
-                        height: '15px',
-                        borderBottom: timeIndex % 4 === 3 ? '1px solid #ccc' : '1px solid #f0f0f0'
-                      }}></div>
-                    ))}
-                    {dayAppointments.map(apt => {
-                      const [startHours, startMinutes] = apt.time.split(':').map(Number);
-                      const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
-                      // Calculate position: each 15-minute slot = 15px
-                      const startPosition = ((startHours * 60 + startMinutes) / 15) * 15;
-                      const endPosition = ((endHours * 60 + endMinutes) / 15) * 15;
-                      const height = Math.max(30, endPosition - startPosition);
-                      return (
-                        <div key={apt.id} style={{
-                          position: 'absolute',
-                          top: `${startPosition}px`,
-                          left: '2px',
-                          right: '2px',
-                          height: `${height}px`,
-                          fontSize: '0.7rem',
-                          padding: '0.25rem',
-                          background: '#22314a',
-                          color: 'white',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          zIndex: 1
-                        }} onClick={() => {
-                          setFormData(apt);
-                          setEditingAppointment(apt.id);
-                          setShowAddForm(true);
-                        }}>
-                          <div style={{ fontWeight: 'bold' }}>{apt.time} - {apt.endTime} {apt.title}</div>
-                          <div>{apt.client}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div key={index} className={`calendar-day ${!isCurrentMonth ? 'calendar-day-muted' : ''} ${isToday ? 'calendar-day-today' : ''}`}>
+                  <div className="calendar-day-date">{date.getDate()}</div>
+                  {dayAppointments.map(apt => (
+                    <div key={apt.id} className="calendar-appointment" onClick={() => {
+                      setFormData(apt);
+                      setEditingAppointment(apt.id);
+                      setShowAddForm(true);
+                    }}>
+                      <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
+                      <div className="calendar-appointment-title">{apt.title}</div>
+                    </div>
+                  ))}
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Daily Calendar Grid */}
-      {currentView === 'daily' && (
-        <div style={{ display: 'flex' }}>
-          {/* Time slots column */}
-          <div style={{ width: '80px', borderRight: '1px solid #dee2e6' }}>
-            <div style={{ height: '40px', borderBottom: '1px solid #dee2e6', background: '#f8f9fa' }}></div>
-            {generateTimeSlots().map((time, index) => (
-              <div key={time} style={{
-                height: '15px',
-                fontSize: '0.7rem',
-                padding: '0 0.25rem',
-                borderBottom: index % 4 === 3 ? '1px solid #ccc' : '1px solid #f0f0f0',
-                display: 'flex',
-                alignItems: 'center',
-                background: '#f8f9fa',
-                justifyContent: 'flex-end'
-              }}>
-                {index % 4 === 0 ? time : ''}
-              </div>
-            ))}
+        {/* Weekly Calendar Grid */}
+        {currentView === 'weekly' && (
+          <div className="calendar-weekly-grid">
+            {/* Time slots column */}
+            <div className="calendar-time-slots">
+              <div className="calendar-time-slot-header"></div>
+              {generateTimeSlots().map((time, index) => (
+                <div key={time} className="calendar-time-slot">
+                  {index % 4 === 0 ? time : ''}
+                </div>
+              ))}
+            </div>
+            {/* Days grid */}
+            <div className="calendar-days-grid">
+              {generateWeeklyCalendar().map((date, index) => {
+                const dayAppointments = getAppointmentsForDate(date);
+                const isToday = date.toDateString() === new Date().toDateString();
+                return (
+                  <div key={index} className={`calendar-day ${isToday ? 'calendar-day-today' : ''}`}>
+                    <div className="calendar-day-header">
+                      {date.toLocaleDateString('en-US', { weekday: 'short', month: 'numeric', day: 'numeric' })}
+                    </div>
+                    <div className="calendar-day-body">
+                      {generateTimeSlots().map((time, timeIndex) => (
+                        <div key={time} className="calendar-time-slot"></div>
+                      ))}
+                      {dayAppointments.map(apt => {
+                        const [startHours, startMinutes] = apt.time.split(':').map(Number);
+                        const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
+                        // Calculate position: each 15-minute slot = 15px
+                        const startPosition = ((startHours * 60 + startMinutes) / 15) * 15;
+                        const endPosition = ((endHours * 60 + endMinutes) / 15) * 15;
+                        const height = Math.max(30, endPosition - startPosition);
+                        return (
+                          <div key={apt.id} className="calendar-appointment" style={{
+                            top: `${startPosition}px`,
+                            height: `${height}px`,
+                          }} onClick={() => {
+                            setFormData(apt);
+                            setEditingAppointment(apt.id);
+                            setShowAddForm(true);
+                          }}>
+                            <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
+                            <div className="calendar-appointment-title">{apt.title}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          {/* Single day grid */}
-          <div style={{ flex: 1 }}>
-            <div style={{
-              background: 'white',
-              border: '1px solid #dee2e6',
-              position: 'relative'
-            }}>
-              <div style={{ 
-                height: '40px', 
-                fontWeight: 'bold', 
-                padding: '0.5rem', 
-                textAlign: 'center',
-                borderBottom: '1px solid #dee2e6',
-                background: '#f8f9fa'
-              }}>
+        )}
+
+        {/* Daily Calendar Grid */}
+        {currentView === 'daily' && (
+          <div className="calendar-daily-grid">
+            {/* Time slots column */}
+            <div className="calendar-time-slots">
+              <div className="calendar-time-slot-header"></div>
+              {generateTimeSlots().map((time, index) => (
+                <div key={time} className="calendar-time-slot">
+                  {index % 4 === 0 ? time : ''}
+                </div>
+              ))}
+            </div>
+            {/* Single day grid */}
+            <div className="calendar-single-day">
+              <div className="calendar-day-header">
                 {currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
               </div>
-              <div style={{ height: `${15 * 96}px`, position: 'relative' }}>
+              <div className="calendar-day-body">
                 {generateTimeSlots().map((time, timeIndex) => (
-                  <div key={time} style={{
-                    height: '15px',
-                    borderBottom: timeIndex % 4 === 3 ? '1px solid #ccc' : '1px solid #f0f0f0'
-                  }}></div>
+                  <div key={time} className="calendar-time-slot"></div>
                 ))}
                 {getAppointmentsForDate(currentDate).map(apt => {
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
@@ -719,39 +535,27 @@ const Calendar = () => {
                   const endPosition = ((endHours * 60 + endMinutes) / 15) * 15;
                   const height = Math.max(30, endPosition - startPosition);
                   return (
-                    <div key={apt.id} style={{
-                      position: 'absolute',
+                    <div key={apt.id} className="calendar-appointment" style={{
                       top: `${startPosition}px`,
-                      left: '2px',
-                      right: '2px',
                       height: `${height}px`,
-                      fontSize: '0.8rem',
-                      padding: '0.5rem',
-                      background: '#22314a',
-                      color: 'white',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      zIndex: 1
                     }} onClick={() => {
                       setFormData(apt);
                       setEditingAppointment(apt.id);
                       setShowAddForm(true);
                     }}>
-                      <div style={{ fontWeight: 'bold' }}>{apt.time} - {apt.endTime} {apt.title}</div>
-                      <div>{apt.client}</div>
-                      <div style={{ fontSize: '0.7rem', marginTop: '0.25rem' }}>{apt.category}</div>
+                      <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
+                      <div className="calendar-appointment-title">{apt.title}</div>
+                      <div className="calendar-appointment-category">{apt.category}</div>
                     </div>
                   );
                 })}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-  </div>
-);
-
+  );
 };
 
 export default Calendar;
