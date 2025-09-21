@@ -107,7 +107,7 @@ const CRM = () => {
       phone: (customerForm.phone || '').trim() || null,
       company: (customerForm.companyName || '').trim() || null,
       address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null,
-      password: customerForm.password // Include password in payload
+      password: customerForm.password // Always include password for add
     };
     try {
       const result = await customersService.create(customerData);
@@ -172,17 +172,21 @@ const CRM = () => {
       return;
     }
     
+    // Build customerData for update
+    const customerData = {
+      firstName: customerForm.firstName.trim(),
+      lastName: customerForm.lastName.trim(),
+      email: customerForm.email.trim(),
+      phone: customerForm.phone.trim() || null,
+      company: customerForm.companyName.trim() || null,
+      address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
+    };
+    if (customerForm.password && customerForm.password.length >= 8) {
+      customerData.password = customerForm.password;
+    }
+    
     try {
       // Convert frontend form data to backend expected format
-      const customerData = {
-        firstName: customerForm.firstName.trim(),
-        lastName: customerForm.lastName.trim(),
-        email: customerForm.email.trim(),
-        phone: customerForm.phone.trim() || null,
-        company: customerForm.companyName.trim() || null,
-        address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
-      };
-      
       console.log('Sending updated customer data to backend:', customerData);
       
       await customersService.update(editingCustomer, customerData);
@@ -374,7 +378,7 @@ const CRM = () => {
                 <input type="text" placeholder="First Name" value={customerForm.firstName} onChange={e => setCustomerForm({ ...customerForm, firstName: e.target.value })} required />
                 <input type="text" placeholder="Last Name" value={customerForm.lastName} onChange={e => setCustomerForm({ ...customerForm, lastName: e.target.value })} required />
                 <input type="email" placeholder="Email Address" value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} required />
-                <input type="password" placeholder="Password (min 8 chars)" value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} required />
+                <input type="password" placeholder={editingCustomer ? "Set/Change Password (min 8 chars, optional)" : "Password (min 8 chars)"} value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} />
                 <input type="tel" placeholder="Phone Number" value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} />
                 <input type="text" placeholder="Street Address" value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} />
                 <input type="text" placeholder="City" value={customerForm.city} onChange={e => setCustomerForm({ ...customerForm, city: e.target.value })} />
