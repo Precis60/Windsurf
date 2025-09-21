@@ -16,6 +16,8 @@ const CompanyPolicies = lazy(() => import("./pages/CompanyPolicies"));
 const AboutUs = lazy(() => import("./pages/AboutUs"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 const CRM = lazy(() => import("./pages/CRM"));
+const CRMWorking = lazy(() => import("./pages/CRM-Working"));
+const CRMSimple = lazy(() => import("./pages/CRM-Simple"));
 const SupportPortal = lazy(() => import("./pages/SupportPortal"));
 const Portal = lazy(() => import("./pages/Portal"));
 const Login = lazy(() => import("./pages/Login"));
@@ -102,11 +104,9 @@ function App() {
                 <Calendar />
               </ProtectedRoute>
             } />
-            <Route path="/crm" element={
-              <ProtectedRoute>
-                <CRM />
-              </ProtectedRoute>
-            } />
+            <Route path="/crm-working" element={<CRMWorking />} />
+            <Route path="/crm" element={<CRM />} />
+            <Route path="/crm-test" element={<CRMSimple />} />
             <Route path="/support-portal" element={
               <ProtectedRoute>
                 <SupportPortal />

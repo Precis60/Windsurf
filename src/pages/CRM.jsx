@@ -600,75 +600,61 @@ const CRM = () => {
                     background: formMessage.type === 'error' ? '#f8d7da' : '#d1e7dd',
                     color: formMessage.type === 'error' ? '#842029' : '#0f5132'
                   }}
-                >
-                  {formMessage.text}
-                </div>
-              )}
 
-              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                <button 
-                  type="button"
-                  style={{
-                    ...buttonStyle,
-                    background: submitting ? '#6c757d' : (editingCustomer ? '#28a745' : '#007bff'),
-                    opacity: submitting ? 0.8 : 1,
-                    cursor: submitting ? 'not-allowed' : 'pointer'
-                  }}
-                  disabled={submitting}
-                  onClick={async (e) => {
-                    console.log('🔴 SAVE BUTTON CLICKED - IMMEDIATE RESPONSE');
-                    alert('Save button clicked! Check console for details.');
-                    try {
-                      await handleAddCustomer(e);
-                    } catch (error) {
-                      console.error('🔴 ERROR IN BUTTON CLICK:', error);
-                      alert('Error: ' + error.message);
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              <button 
+                type="button"
+                style={{
+                  ...buttonStyle,
+                  background: submitting ? '#6c757d' : '#007bff',
+                  cursor: submitting ? 'not-allowed' : 'pointer'
+                }}
+                disabled={submitting}
+                onClick={async () => {
+                  console.log('Save Customer button clicked - saving to online database');
+                  setSubmitting(true);
+                  setFormMessage({ type: '', text: '' });
+                  
+                  try {
+                    // Validate required fields
+                    if (!customerForm.contactName?.trim()) {
+                      setFormMessage({ type: 'error', text: 'Contact Name is required' });
+                      setSubmitting(false);
+                      return;
                     }
-                  }}
-                >
-                  {submitting ? 'Saving…' : (editingCustomer ? 'Update Customer' : 'Save Customer')}
-                </button>
-                
-                <button 
-                  type="button" 
-                  style={{
-                    ...buttonStyle,
-                    background: '#28a745'
-                  }}
-                  onClick={debugButtonClick}
-                >
-                  DEBUG CLICK
-                </button>
-                
-                <button 
-                  type="button" 
-                  style={{
-                    ...buttonStyle,
-                    background: '#ffc107',
-                    color: '#000'
-                  }}
-                  onClick={() => {
-                    alert('IMMEDIATE RESPONSE - FILL TEST DATA!');
-                    console.log('🟡 FILL TEST DATA CLICKED');
-                    setCustomerForm({
-                      ...customerForm,
-                      contactName: 'Test User ' + Date.now(),
-                      email: `test${Date.now()}@example.com`,
-                      companyName: 'Test Company'
-                    });
-                    setFormMessage({ type: 'success', text: 'Test data filled successfully!' });
-                  }}
-                >
-                  FILL TEST DATA
-                </button>
-                
-                <button 
-                  type="button" 
-                  onClick={() => {
-                    setShowCustomerForm(false);
-                    setEditingCustomer(null);
-                    setFormMessage({ type: '', text: '' });
-                    setSubmitting(false);
+                    
+                    if (!customerForm.email?.trim()) {
+                      setFormMessage({ type: 'error', text: 'Email is required' });
+                      setSubmitting(false);
+                      return;
+                    }
+                    
+                    // Prepare data for backend API
+                    const nameParts = customerForm.contactName.trim().split(' ');
+                    const firstName = nameParts[0] || 'Customer';
+                    const lastName = nameParts.slice(1).join(' ') || '';
+                    
+                    const customerData = {
+                      firstName: firstName,
+                      lastName: lastName,
+                      email: customerForm.email.trim(),
+                      phone: customerForm.phone?.trim() || null,
+                      company: customerForm.companyName?.trim() || null,
+                      address: [customerForm.address, customerForm.city, customerForm.state, customerForm.zipCode].filter(Boolean).join(', ') || null
+                    };
+                    
+                    console.log('Sending to online database:', customerData);
+                    
+                    // Save to online database
+                    const result = await customersService.create(customerData);
+                    console.log('Customer saved to online database:', result);
+                    
+                    // Reload customers from database
+                    const response = await customersService.getAll();
+                    const customerList = Array.isArray(response) ? response : response.customers || [];
+                    setCustomers(customerList);
+                    
+                    // Clear form and close
                     setCustomerForm({
                       companyName: '',
                       contactName: '',
