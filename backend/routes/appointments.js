@@ -162,8 +162,8 @@ router.post('/', authenticateToken, [
     // Check for conflicting appointments
     const conflictCheck = await query(
       `SELECT id FROM appointments 
-       WHERE appointment_date < $1 + INTERVAL '${durationMinutes} minutes'
-       AND appointment_date + INTERVAL '1 minute' * duration_minutes > $1
+       WHERE appointment_date < ($1::timestamp + INTERVAL '${durationMinutes} minutes')
+       AND (appointment_date + INTERVAL '1 minute' * duration_minutes) > $1::timestamp
        AND status NOT IN ('cancelled', 'completed')`,
       [appointmentDate]
     );
