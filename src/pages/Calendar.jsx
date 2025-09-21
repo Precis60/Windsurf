@@ -202,11 +202,16 @@ const Calendar = () => {
       durationMinutes: duration,
       customerId: Number(formData.customerId),
       address: formData.address || '',
-      addressPlaceId: formData.addressMeta?.placeId || null,
-      addressLat: formData.addressMeta?.lat ?? null,
-      addressLng: formData.addressMeta?.lng ?? null,
-      addressComponents: formData.addressMeta?.components || null
+      category: formData.category || ''
     };
+
+    // Only add address metadata if it's valid and has a placeId
+    if (formData.addressMeta && formData.addressMeta.placeId) {
+      appointmentData.addressPlaceId = formData.addressMeta.placeId;
+      appointmentData.addressLat = formData.addressMeta.lat;
+      appointmentData.addressLng = formData.addressMeta.lng;
+      appointmentData.addressComponents = formData.addressMeta.components;
+    }
     // Log payload and types for debugging
     console.log('Appointment payload:', appointmentData);
     Object.keys(appointmentData).forEach(key => {
@@ -289,11 +294,12 @@ const Calendar = () => {
       address: formData.address || '',
       category: formData.category || '',
     };
-    if (formData.addressMeta) {
-      appointmentData.addressPlaceId = formData.addressMeta.placeId || null;
-      appointmentData.addressLat = formData.addressMeta.lat ?? null;
-      appointmentData.addressLng = formData.addressMeta.lng ?? null;
-      appointmentData.addressComponents = formData.addressMeta.components || null;
+    // Only add address metadata if it's valid and has a placeId
+    if (formData.addressMeta && formData.addressMeta.placeId) {
+      appointmentData.addressPlaceId = formData.addressMeta.placeId;
+      appointmentData.addressLat = formData.addressMeta.lat;
+      appointmentData.addressLng = formData.addressMeta.lng;
+      appointmentData.addressComponents = formData.addressMeta.components;
     }
 
     try {
