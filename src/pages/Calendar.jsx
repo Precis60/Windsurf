@@ -431,6 +431,23 @@ const Calendar = () => {
             {currentView === 'daily' && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
           </h3>
           <button onClick={() => navigateDate(1)} className="calendar-nav-btn">Next ›</button>
+          <div className="calendar-view-switcher">
+            <button
+              className={`calendar-view-btn${currentView === 'monthly' ? ' active' : ''}`}
+              onClick={() => setCurrentView('monthly')}
+              type="button"
+            >Monthly</button>
+            <button
+              className={`calendar-view-btn${currentView === 'weekly' ? ' active' : ''}`}
+              onClick={() => setCurrentView('weekly')}
+              type="button"
+            >Weekly</button>
+            <button
+              className={`calendar-view-btn${currentView === 'daily' ? ' active' : ''}`}
+              onClick={() => setCurrentView('daily')}
+              type="button"
+            >Daily</button>
+          </div>
         </div>
 
         {/* Monthly Calendar Grid */}
