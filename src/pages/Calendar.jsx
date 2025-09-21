@@ -83,14 +83,19 @@ const Calendar = () => {
   const handleAddAppointment = async (e) => {
     e.preventDefault();
     console.log('Attempting to create appointment with data:', formData);
-    
+    // Validate duration before submitting
+    const duration = calculateDurationMinutes(formData.time, formData.endTime);
+    if (isNaN(duration) || duration < 15 || duration > 840) {
+      alert('Duration must be between 15 and 840 minutes.');
+      return;
+    }
     try {
       // Convert frontend data format to backend expected format
       const appointmentData = {
         title: formData.title,
         description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
         appointmentDate: `${formData.date}T${formData.time}:00.000Z`,
-        durationMinutes: calculateDurationMinutes(formData.time, formData.endTime),
+        durationMinutes: duration,
         customerId: formData.customerId || null
       };
       
