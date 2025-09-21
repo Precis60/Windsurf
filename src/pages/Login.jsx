@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/secureApi';
 
@@ -11,6 +11,16 @@ const Login = ({ onLogin }) => {
   const [debugUser, setDebugUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // If already authenticated, redirect immediately based on role
+  useEffect(() => {
+    const current = authService.getCurrentUser?.() || null;
+    if (current) {
+      const role = current.role;
+      if (role === 'admin' || role === 'staff') navigate('/portal');
+      else navigate('/client-portal');
+    }
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -30,10 +40,11 @@ const Login = ({ onLogin }) => {
       setDebugUser(result.user); // Display user object for debugging
       onLogin(result);
       // Role-based redirection
-      if (authService.isAdmin()) {
-        navigate('/dashboard');
+      const role = result?.user?.role;
+      if (role === 'admin' || role === 'staff') {
+        navigate('/portal'); // Company Portal for staff/admin
       } else {
-        navigate('/portal');
+        navigate('/client-portal'); // Client Portal for customers
       }
     } catch (error) {
       setError(error.message || 'Login failed. Please check your credentials.');

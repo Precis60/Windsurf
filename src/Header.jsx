@@ -11,12 +11,16 @@ const pages = [
   { name: "About Us", path: "/about-us" },
 ];
 
-const authenticatedPages = [
+const staffPages = [
   { name: "Dashboard", path: "/dashboard" },
   { name: "Calendar", path: "/calendar" },
   { name: "CRM", path: "/crm" },
   { name: "Support Portal", path: "/support-portal" },
-  { name: "Portal", path: "/portal" }
+  { name: "Company Portal", path: "/portal" }
+];
+
+const customerPages = [
+  { name: "Client Portal", path: "/client-portal" },
 ];
 
 const Header = ({ user, onLogout }) => {
@@ -29,7 +33,9 @@ const Header = ({ user, onLogout }) => {
     setMenuOpen(false);
   };
 
-  const menuPages = user ? [...pages, ...authenticatedPages] : pages;
+  const isStaff = user && (user.role === 'admin' || user.role === 'staff');
+  const authedSet = isStaff ? staffPages : customerPages;
+  const menuPages = user ? [...pages, ...authedSet] : pages;
 
   return (
     <header className="header">
@@ -133,7 +139,7 @@ const Header = ({ user, onLogout }) => {
                 <Link to={page.path}>{page.name}</Link>
               </li>
             ))}
-            {user && authenticatedPages.map((page) => (
+            {user && (isStaff ? staffPages : customerPages).map((page) => (
               <li key={page.path} onClick={() => setMenuOpen(false)}>
                 <Link to={page.path}>{page.name}</Link>
               </li>
