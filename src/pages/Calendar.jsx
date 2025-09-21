@@ -413,7 +413,14 @@ const Calendar = () => {
           </button>
           
           {showAddForm && (
-            <form onSubmit={editingAppointment ? handleUpdateAppointment : handleAddAppointment} style={{ marginTop: '1rem' }}>
+            <form onSubmit={e => {
+  e.preventDefault();
+  if (!formData.customerId) {
+    alert('Please select a valid client from the dropdown.');
+    return;
+  }
+  (editingAppointment ? handleUpdateAppointment : handleAddAppointment)(e);
+}} style={{ marginTop: '1rem' }}>
               <input
                 type="text"
                 placeholder="Appointment Title"
@@ -431,6 +438,12 @@ const Calendar = () => {
                     setClientSearch(e.target.value);
                     setShowClientDropdown(true);
                     setFormData({ ...formData, client: e.target.value, customerId: '' });
+                  }}
+                  onBlur={() => {
+                    setTimeout(() => setShowClientDropdown(false), 200);
+                    // If the typed value does not match a customer, clear customerId
+                    const match = customers.find(c => `${c.firstName} ${c.lastName}`.toLowerCase() === clientSearch.toLowerCase());
+                    if (!match) setFormData(f => ({ ...f, customerId: '' }));
                   }}
                   onFocus={() => setShowClientDropdown(true)}
                   autoComplete="off"
