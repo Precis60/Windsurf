@@ -1,5 +1,5 @@
   import React, { useState, useEffect } from "react";
-import { appointmentsService, authService, calendarService, appointmentRequestService } from '../services/secureApi';
+import { appointmentsService, authService, calendarService, appointmentRequestService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import AddressAutocomplete from '../components/AddressAutocomplete';
 import CustomConfirmModal from '../components/CustomConfirmModal';
@@ -109,18 +109,32 @@ const Calendar = () => {
           setNotice({ type: 'error', message: msg });
         }
 
-        // Load customers (minimal set for calendar)
+        // Load customers (minimal set for calendar) with admin fallback
         try {
           const customersResponse = await calendarService.getCalendarCustomers();
           const customerList = Array.isArray(customersResponse) ? customersResponse : customersResponse.customers || [];
           setCustomers(customerList);
         } catch (error) {
-          console.error('Error loading customers:', error);
-          setCustomers([]);
+          console.error('Error loading customers (calendar endpoint):', error);
+          // If forbidden, attempt full customers list (admin/staff have access)
           if (error?.status === 403) {
-            setNotice({ type: 'error', message: 'You are logged in without admin/staff permissions. Customer list is hidden. Appointments can still be created by typing a client name, but dropdown requires admin/staff.' });
+            try {
+              const fullResp = await customersService.getAll();
+              const fullList = Array.isArray(fullResp) ? fullResp : fullResp.customers || [];
+              setCustomers(fullList);
+            } catch (e2) {
+              console.error('Fallback customers load failed:', e2);
+              setCustomers([]);
+              const u = authService.getCurrentUser?.();
+              if (!u || (u.role !== 'admin' && u.role !== 'staff')) {
+                setNotice({ type: 'error', message: 'You are logged in without admin/staff permissions. Customer list is hidden. Appointments can still be created by typing a client name, but dropdown requires admin/staff.' });
+              }
+            }
           } else if (error?.status === 401) {
+            setCustomers([]);
             setNotice({ type: 'error', message: 'Your session has expired. Please log in again to load customers.' });
+          } else {
+            setCustomers([]);
           }
         }
 
