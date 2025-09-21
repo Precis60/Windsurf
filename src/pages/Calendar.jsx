@@ -575,9 +575,9 @@ const Calendar = () => {
                         const style = getCategoryStyle(apt.category);
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
                         const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
-                        // Calculate position: each 15-minute slot = 15px
-                        const startPosition = ((startHours * 60 + startMinutes) / 15) * 15;
-                        const endPosition = ((endHours * 60 + endMinutes) / 15) * 15;
+                        // Calculate position: each minute = 1px (1440px total for 24 hours)
+                        const startPosition = startHours * 60 + startMinutes;
+                        const endPosition = endHours * 60 + endMinutes;
                         const height = Math.max(30, endPosition - startPosition);
                         return (
                           <div key={apt.id} className="calendar-appointment" style={{
@@ -632,9 +632,9 @@ const Calendar = () => {
                   const style = getCategoryStyle(apt.category);
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
                   const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
-                  // Calculate position: each 15-minute slot = 15px
-                  const startPosition = ((startHours * 60 + startMinutes) / 15) * 15;
-                  const endPosition = ((endHours * 60 + endMinutes) / 15) * 15;
+                  // Calculate position: each minute = 1px (1440px total for 24 hours)
+                  const startPosition = startHours * 60 + startMinutes;
+                  const endPosition = endHours * 60 + endMinutes;
                   const height = Math.max(30, endPosition - startPosition);
                   return (
                     <div key={apt.id} className="calendar-appointment" style={{
