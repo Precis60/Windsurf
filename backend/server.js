@@ -63,6 +63,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'Precision Cabling & Automation API is running',
+    version: '2.1.0-auth-fix',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
