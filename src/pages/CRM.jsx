@@ -26,7 +26,8 @@ const CRM = () => {
     zipCode: '',
     clientType: '',
     notes: '',
-    password: '' // Added password field
+    password: '', // Added password field
+    role: 'user' // Add role to state, default to 'user'
   });
 
   // Check authentication on component mount
@@ -179,7 +180,10 @@ const CRM = () => {
       email: customerForm.email.trim(),
       phone: customerForm.phone.trim() || null,
       company: customerForm.companyName.trim() || null,
-      address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null
+      address: `${customerForm.address}, ${customerForm.city}, ${customerForm.state} ${customerForm.zipCode}`.trim().replace(/^,\s*|,\s*$/g, '') || null,
+      role: customerForm.role,
+      clientType: customerForm.clientType,
+      notes: customerForm.notes
     };
     if (customerForm.password && customerForm.password.length >= 8) {
       customerData.password = customerForm.password;
@@ -261,7 +265,8 @@ const CRM = () => {
       state: state,
       zipCode: zipCode,
       clientType: customer.clientType || '',
-      notes: customer.notes || ''
+      notes: customer.notes || '',
+      role: customer.role || 'user'
     });
     setEditingCustomer(customer.id);
     setShowCustomerForm(true);
@@ -378,6 +383,12 @@ const CRM = () => {
                 <input type="text" placeholder="First Name" value={customerForm.firstName} onChange={e => setCustomerForm({ ...customerForm, firstName: e.target.value })} required />
                 <input type="text" placeholder="Last Name" value={customerForm.lastName} onChange={e => setCustomerForm({ ...customerForm, lastName: e.target.value })} required />
                 <input type="email" placeholder="Email Address" value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} required />
+                {editingCustomer && (
+                  <select value={customerForm.role} onChange={e => setCustomerForm({ ...customerForm, role: e.target.value })}>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                )}
                 <input type="password" placeholder={editingCustomer ? "Set/Change Password (min 8 chars, optional)" : "Password (min 8 chars)"} value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} />
                 <input type="tel" placeholder="Phone Number" value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} />
                 <input type="text" placeholder="Street Address" value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} />
