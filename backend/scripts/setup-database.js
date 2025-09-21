@@ -17,7 +17,7 @@ async function setupDatabase() {
         company VARCHAR(255),
         address TEXT,
         role VARCHAR(20) DEFAULT 'customer' CHECK (role IN ('customer', 'staff', 'admin')),
-        is_active BOOLEAN DEFAULT true,
+        is_active BOOLEAN DEFAULT true, -- Use this for soft-delete
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_login TIMESTAMP

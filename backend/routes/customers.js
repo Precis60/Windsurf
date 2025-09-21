@@ -15,7 +15,7 @@ router.get('/', authenticateToken, requireRole(['admin', 'staff']), async (req, 
       SELECT id, first_name, last_name, email, phone, company, address, 
              created_at, last_login
       FROM users 
-      WHERE role = 'customer'
+      WHERE role = 'customer' AND is_active = true
     `;
     
     const queryParams = [];
@@ -33,7 +33,7 @@ router.get('/', authenticateToken, requireRole(['admin', 'staff']), async (req, 
     const result = await query(queryText, queryParams);
 
     // Get total count for pagination
-    let countQuery = 'SELECT COUNT(*) FROM users WHERE role = \'customer\'';
+    let countQuery = 'SELECT COUNT(*) FROM users WHERE role = \'customer\' AND is_active = true';
     const countParams = [];
     
     if (search) {
@@ -97,7 +97,7 @@ router.get('/:id', authenticateToken, [
       `SELECT id, first_name, last_name, email, phone, company, address, 
               created_at, last_login
        FROM users 
-       WHERE id = $1 AND role = 'customer'`,
+       WHERE id = $1 AND role = 'customer' AND is_active = true`,
       [customerId]
     );
 
@@ -252,18 +252,37 @@ router.delete('/:id', authenticateToken, requireRole(['admin']), [
 
     const customerId = req.params.id;
 
-    const result = await query(
-      'DELETE FROM users WHERE id = $1 AND role = \'customer\' RETURNING id',
+    // Check if customer exists
+    const customerCheck = await query(
+      "SELECT id FROM users WHERE id = $1 AND role = 'customer' AND is_active = true",
       [customerId]
     );
 
-    if (result.rows.length === 0) {
+    if (customerCheck.rows.length === 0) {
       return res.status(404).json({ 
         error: { message: 'Customer not found' } 
       });
     }
 
-    res.json({ message: 'Customer deleted successfully' });
+    // Check if customer has active appointments
+    const appointmentCheck = await query(
+      "SELECT id FROM appointments WHERE customer_id = $1 AND status NOT IN ('cancelled', 'completed')",
+      [customerId]
+    );
+
+    if (appointmentCheck.rows.length > 0) {
+      return res.status(409).json({ 
+        error: { message: 'Cannot delete customer with active appointments' } 
+      });
+    }
+
+    // Soft delete by setting is_active = false
+    await query(
+      'UPDATE users SET is_active = false, updated_at = NOW() WHERE id = $1',
+      [customerId]
+    );
+
+    res.json({ message: 'Customer deleted (deactivated) successfully' });
 
   } catch (error) {
     console.error('Delete customer error:', error);
@@ -273,11 +292,12 @@ router.delete('/:id', authenticateToken, requireRole(['admin']), [
   }
 });
 
-// Create new customer
+// Create new customer (admin/staff only)
 router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
   body('firstName').trim().isLength({ min: 1 }).withMessage('First name is required'),
   body('lastName').trim().isLength({ min: 1 }).withMessage('Last name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('phone').optional().trim(),
   body('company').optional().trim(),
   body('address').optional().trim()
@@ -290,7 +310,7 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
       });
     }
 
-    const { firstName, lastName, email, phone, company, address } = req.body;
+    const { firstName, lastName, email, password, phone, company, address } = req.body;
 
     // Check if customer with this email already exists
     const existingCustomer = await query(
@@ -304,12 +324,16 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
       });
     }
 
+    // Hash password
+    const bcrypt = (await import('bcrypt')).default;
+    const hashedPassword = await bcrypt.hash(password, 12);
+
     // Create customer (user with role 'customer')
     const result = await query(
-      `INSERT INTO users (first_name, last_name, email, phone, company, address, role, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, 'customer', NOW())
+      `INSERT INTO users (first_name, last_name, email, password_hash, phone, company, address, role, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'customer', NOW())
        RETURNING id, first_name, last_name, email, phone, company, address, created_at`,
-      [firstName, lastName, email, phone || null, company || null, address || null]
+      [firstName, lastName, email, hashedPassword, phone || null, company || null, address || null]
     );
 
     const newCustomer = result.rows[0];
@@ -332,186 +356,6 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
     console.error('Create customer error:', error);
     res.status(500).json({ 
       error: { message: 'Failed to create customer' } 
-    });
-  }
-});
-
-// Update customer
-router.put('/:id', authenticateToken, requireRole(['admin', 'staff']), [
-  param('id').isInt().withMessage('Invalid customer ID'),
-  body('firstName').optional().trim().isLength({ min: 1 }).withMessage('First name cannot be empty'),
-  body('lastName').optional().trim().isLength({ min: 1 }).withMessage('Last name cannot be empty'),
-  body('email').optional().isEmail().withMessage('Valid email is required'),
-  body('phone').optional().trim(),
-  body('company').optional().trim(),
-  body('address').optional().trim()
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        error: { message: 'Validation failed', details: errors.array() } 
-      });
-    }
-
-    const customerId = req.params.id;
-    const { firstName, lastName, email, phone, company, address } = req.body;
-
-    // Check if customer exists
-    const customerCheck = await query(
-      'SELECT id FROM users WHERE id = $1 AND role = \'customer\'',
-      [customerId]
-    );
-
-    if (customerCheck.rows.length === 0) {
-      return res.status(404).json({ 
-        error: { message: 'Customer not found' } 
-      });
-    }
-
-    // Check if email is being changed and if it conflicts
-    if (email) {
-      const emailCheck = await query(
-        'SELECT id FROM users WHERE email = $1 AND id != $2',
-        [email, customerId]
-      );
-
-      if (emailCheck.rows.length > 0) {
-        return res.status(409).json({ 
-          error: { message: 'Email already in use by another customer' } 
-        });
-      }
-    }
-
-    // Build update query dynamically
-    const updateFields = [];
-    const updateValues = [];
-    let paramCount = 0;
-
-    if (firstName !== undefined) {
-      paramCount++;
-      updateFields.push(`first_name = $${paramCount}`);
-      updateValues.push(firstName);
-    }
-    if (lastName !== undefined) {
-      paramCount++;
-      updateFields.push(`last_name = $${paramCount}`);
-      updateValues.push(lastName);
-    }
-    if (email !== undefined) {
-      paramCount++;
-      updateFields.push(`email = $${paramCount}`);
-      updateValues.push(email);
-    }
-    if (phone !== undefined) {
-      paramCount++;
-      updateFields.push(`phone = $${paramCount}`);
-      updateValues.push(phone);
-    }
-    if (company !== undefined) {
-      paramCount++;
-      updateFields.push(`company = $${paramCount}`);
-      updateValues.push(company);
-    }
-    if (address !== undefined) {
-      paramCount++;
-      updateFields.push(`address = $${paramCount}`);
-      updateValues.push(address);
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({ 
-        error: { message: 'No fields to update' } 
-      });
-    }
-
-    paramCount++;
-    updateValues.push(customerId);
-
-    const result = await query(
-      `UPDATE users 
-       SET ${updateFields.join(', ')}, updated_at = NOW()
-       WHERE id = $${paramCount} AND role = 'customer'
-       RETURNING id, first_name, last_name, email, phone, company, address, updated_at`,
-      updateValues
-    );
-
-    const updatedCustomer = result.rows[0];
-
-    res.json({
-      message: 'Customer updated successfully',
-      customer: {
-        id: updatedCustomer.id,
-        firstName: updatedCustomer.first_name,
-        lastName: updatedCustomer.last_name,
-        email: updatedCustomer.email,
-        phone: updatedCustomer.phone,
-        company: updatedCustomer.company,
-        address: updatedCustomer.address,
-        updatedAt: updatedCustomer.updated_at
-      }
-    });
-
-  } catch (error) {
-    console.error('Update customer error:', error);
-    res.status(500).json({ 
-      error: { message: 'Failed to update customer' } 
-    });
-  }
-});
-
-// Delete customer
-router.delete('/:id', authenticateToken, requireRole(['admin']), [
-  param('id').isInt().withMessage('Invalid customer ID')
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ 
-        error: { message: 'Validation failed', details: errors.array() } 
-      });
-    }
-
-    const customerId = req.params.id;
-
-    // Check if customer exists
-    const customerCheck = await query(
-      'SELECT id FROM users WHERE id = $1 AND role = \'customer\'',
-      [customerId]
-    );
-
-    if (customerCheck.rows.length === 0) {
-      return res.status(404).json({ 
-        error: { message: 'Customer not found' } 
-      });
-    }
-
-    // Check if customer has active appointments
-    const appointmentCheck = await query(
-      'SELECT id FROM appointments WHERE customer_id = $1 AND status NOT IN (\'cancelled\', \'completed\')',
-      [customerId]
-    );
-
-    if (appointmentCheck.rows.length > 0) {
-      return res.status(409).json({ 
-        error: { message: 'Cannot delete customer with active appointments' } 
-      });
-    }
-
-    // Soft delete by updating role to 'deleted_customer'
-    await query(
-      'UPDATE users SET role = \'deleted_customer\', updated_at = NOW() WHERE id = $1',
-      [customerId]
-    );
-
-    res.json({
-      message: 'Customer deleted successfully'
-    });
-
-  } catch (error) {
-    console.error('Delete customer error:', error);
-    res.status(500).json({ 
-      error: { message: 'Failed to delete customer' } 
     });
   }
 });
