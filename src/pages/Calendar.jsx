@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { appointmentsService, authService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
+import CustomConfirmModal from '../components/CustomConfirmModal';
 import './Calendar.css';
 
 const Calendar = () => {
@@ -178,19 +179,26 @@ const Calendar = () => {
     }
   };
 
-  // Delete appointment from secure API
+  // Modal state for confirmation
+  const [confirmModal, setConfirmModal] = useState({ open: false, id: null });
+
+  // Delete appointment from secure API (custom modal)
   const handleDeleteAppointment = async (id) => {
-    if (window.confirm('Are you sure you want to delete this appointment?')) {
-      try {
-        await appointmentsService.delete(id);
-        // Reload appointments
-        const response = await appointmentsService.getAll();
-        const appointmentList = Array.isArray(response) ? response : response.appointments || [];
-        setAppointments(appointmentList);
-      } catch (error) {
-        console.error('Error deleting appointment:', error);
-        alert('Failed to delete appointment. Please try again.');
-      }
+    setConfirmModal({ open: true, id });
+  };
+
+  const confirmDeleteAppointment = async () => {
+    const id = confirmModal.id;
+    setConfirmModal({ open: false, id: null });
+    try {
+      await appointmentsService.delete(id);
+      // Reload appointments
+      const response = await appointmentsService.getAll();
+      const appointmentList = Array.isArray(response) ? response : response.appointments || [];
+      setAppointments(appointmentList);
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      alert('Failed to delete appointment. Please try again.');
     }
   };
 
@@ -554,6 +562,13 @@ const Calendar = () => {
           </div>
         )}
       </div>
+      <CustomConfirmModal
+        open={confirmModal.open}
+        title="Delete Appointment"
+        message="Are you sure you want to delete this appointment? This action cannot be undone."
+        onConfirm={confirmDeleteAppointment}
+        onCancel={() => setConfirmModal({ open: false, id: null })}
+      />
     </div>
   );
 };
