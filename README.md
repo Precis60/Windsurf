@@ -1,6 +1,8 @@
-# Precision Cabling & Automation - Full Stack Application
+# Precision Cabling Automation - Business Website
 
-A complete web application for Precision Cabling & Automation with React frontend, Node.js backend, and AWS PostgreSQL database.
+A comprehensive business management platform for Precision Cabling Solutions, built with React and Vite.
+
+🚀 **Latest Update**: Fixed calendar monthly, weekly, and daily views with complete CSS implementation.
 
 ## 🏗️ Architecture
 
