@@ -55,6 +55,35 @@ const Calendar = () => {
     checkAuth();
   }, []);
 
+  // Helper function to convert backend appointment format to calendar format
+  const transformAppointment = (apt) => {
+    if (!apt.appointmentDate) return apt;
+    
+    // Parse the appointmentDate
+    const appointmentDate = new Date(apt.appointmentDate);
+    
+    // Extract time components
+    const hours = appointmentDate.getHours().toString().padStart(2, '0');
+    const minutes = appointmentDate.getMinutes().toString().padStart(2, '0');
+    const startTime = `${hours}:${minutes}`;
+    
+    // Calculate end time from duration
+    let endTime = startTime;
+    if (apt.durationMinutes) {
+      const endDate = new Date(appointmentDate.getTime() + (apt.durationMinutes * 60000));
+      const endHours = endDate.getHours().toString().padStart(2, '0');
+      const endMinutes = endDate.getMinutes().toString().padStart(2, '0');
+      endTime = `${endHours}:${endMinutes}`;
+    }
+    
+    return {
+      ...apt,
+      time: startTime,
+      endTime: endTime,
+      date: apt.appointmentDate // Keep both for compatibility
+    };
+  };
+
   // Load appointments and customers from secure API
   useEffect(() => {
     if (isAuthenticated) {
@@ -63,8 +92,12 @@ const Calendar = () => {
           // Load appointments
           const appointmentsResponse = await appointmentsService.getAll();
           const appointmentList = Array.isArray(appointmentsResponse) ? appointmentsResponse : appointmentsResponse.appointments || [];
-          console.log('Loaded appointments:', appointmentList);
-          setAppointments(appointmentList);
+          console.log('Loaded raw appointments:', appointmentList);
+          
+          // Transform appointments to include time/endTime fields
+          const transformedAppointments = appointmentList.map(transformAppointment);
+          console.log('Transformed appointments:', transformedAppointments);
+          setAppointments(transformedAppointments);
           
           // Load customers
           const customersResponse = await customersService.getAll();
@@ -117,7 +150,8 @@ const Calendar = () => {
       // Reload appointments
       const response = await appointmentsService.getAll();
       const appointmentList = Array.isArray(response) ? response : response.appointments || [];
-      setAppointments(appointmentList);
+      const transformedAppointments = appointmentList.map(transformAppointment);
+      setAppointments(transformedAppointments);
       alert('Appointment added successfully!');
     } catch (error) {
       let errorMessage = 'Failed to add appointment. ';
@@ -172,7 +206,8 @@ const Calendar = () => {
       // Reload appointments
       const response = await appointmentsService.getAll();
       const appointmentList = Array.isArray(response) ? response : response.appointments || [];
-      setAppointments(appointmentList);
+      const transformedAppointments = appointmentList.map(transformAppointment);
+      setAppointments(transformedAppointments);
     } catch (error) {
       console.error('Error updating appointment:', error);
       alert('Failed to update appointment. Please try again.');
@@ -195,7 +230,8 @@ const Calendar = () => {
       // Reload appointments
       const response = await appointmentsService.getAll();
       const appointmentList = Array.isArray(response) ? response : response.appointments || [];
-      setAppointments(appointmentList);
+      const transformedAppointments = appointmentList.map(transformAppointment);
+      setAppointments(transformedAppointments);
     } catch (error) {
       console.error('Error deleting appointment:', error);
       alert('Failed to delete appointment. Please try again.');
