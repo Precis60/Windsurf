@@ -24,6 +24,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SupportRequest = lazy(() => import("./pages/SupportRequest"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminRoute = lazy(() => import("./components/AdminRoute"));
 
 function App() {
   // Determine basename for GitHub Pages
@@ -50,13 +51,6 @@ function App() {
     setUser(null);
   };
 
-  // Protected route component
-  const ProtectedRoute = ({ children }) => {
-    if (!user) {
-      return <Navigate to="/login" replace />;
-    }
-    return children;
-  };
 
   if (loading) {
     return (
@@ -93,30 +87,18 @@ function App() {
             {/* Public support request route */}
             <Route path="/support-request" element={<SupportRequest />} />
             
-            {/* Protected routes */}
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/calendar" element={
-              <ProtectedRoute>
-                <Calendar />
-              </ProtectedRoute>
-            } />
-            <Route path="/crm-working" element={<CRMWorking />} />
-            <Route path="/crm" element={<CRM />} />
-            <Route path="/crm-test" element={<CRMSimple />} />
-            <Route path="/support-portal" element={
-              <ProtectedRoute>
-                <SupportPortal />
-              </ProtectedRoute>
-            } />
-            <Route path="/portal" element={
-              <ProtectedRoute>
-                <Portal />
-              </ProtectedRoute>
-            } />
+            {/* Admin-only routes */}
+            <Route element={<AdminRoute />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/crm" element={<CRM />} />
+              <Route path="/crm-working" element={<CRMWorking />} />
+              <Route path="/crm-test" element={<CRMSimple />} />
+              <Route path="/support-portal" element={<SupportPortal />} />
+            </Route>
+
+            {/* General authenticated routes */}
+            <Route path="/portal" element={<Portal />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

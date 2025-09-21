@@ -27,7 +27,12 @@ const Login = ({ onLogin }) => {
     try {
       const result = await authService.login(formData.email, formData.password);
       onLogin(result);
-      navigate('/'); // Redirect to home after successful login
+      // Role-based redirection
+      if (authService.isAdmin()) {
+        navigate('/dashboard');
+      } else {
+        navigate('/portal');
+      }
     } catch (error) {
       setError(error.message || 'Login failed. Please check your credentials.');
     } finally {

@@ -435,6 +435,13 @@ class SecureApiService {
     return this.user;
   }
 
+  isAdmin() {
+    if (!this.user) {
+      this.user = this.getStoredUser();
+    }
+    return this.user && this.user.role === 'admin' && this.user.firstName === 'Jamie' && this.user.lastName === 'Anderson';
+  }
+
   // Health Check
   async healthCheck() {
     try {
@@ -459,6 +466,7 @@ export const authService = {
   logout: () => secureApi.logout(),
   isAuthenticated: () => secureApi.isAuthenticated(),
   getCurrentUser: () => secureApi.getCurrentUser(),
+  isAdmin: () => secureApi.isAdmin(),
 };
 
 export const appointmentsService = {
