@@ -104,6 +104,29 @@ async function setupDatabase() {
     await query('CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status)');
     await query('CREATE INDEX IF NOT EXISTS idx_support_responses_ticket_id ON support_responses(ticket_id)');
 
+    // Create appointment_requests table for tentative appointments
+    await query(`
+      CREATE TABLE IF NOT EXISTS appointment_requests (
+        id SERIAL PRIMARY KEY,
+        customer_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        requested_date TIMESTAMP NOT NULL,
+        duration_minutes INTEGER DEFAULT 60,
+        status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'declined')),
+        address TEXT,
+        address_place_id VARCHAR(255),
+        address_lat DOUBLE PRECISION,
+        address_lng DOUBLE PRECISION,
+        address_components JSONB,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query('CREATE INDEX IF NOT EXISTS idx_appointment_requests_customer_id ON appointment_requests(customer_id)');
+    await query('CREATE INDEX IF NOT EXISTS idx_appointment_requests_requested_date ON appointment_requests(requested_date)');
+
     console.log('✅ Database tables created successfully');
 
     // Create default admin user

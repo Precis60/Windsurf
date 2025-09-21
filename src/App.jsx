@@ -20,6 +20,7 @@ const CRMWorking = lazy(() => import("./pages/CRM-Working"));
 const CRMSimple = lazy(() => import("./pages/CRM-Simple"));
 const SupportPortal = lazy(() => import("./pages/SupportPortal"));
 const Portal = lazy(() => import("./pages/Portal"));
+const ClientPortal = lazy(() => import("./pages/ClientPortal"));
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SupportRequest = lazy(() => import("./pages/SupportRequest"));
@@ -99,6 +100,7 @@ function App() {
 
             {/* General authenticated routes */}
             <Route path="/portal" element={<Portal />} />
+            <Route path="/client-portal" element={<ClientPortal />} />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

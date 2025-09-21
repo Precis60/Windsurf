@@ -508,3 +508,14 @@ export const calendarService = {
     return await secureApi.secureRequest(`/calendar/customers${params}`);
   },
 };
+
+// Appointment Requests
+export const appointmentRequestService = {
+  getAll: async (params = '') => {
+    const qs = typeof params === 'string' && params ? params : '';
+    return await secureApi.secureRequest(`/appointment-requests${qs}`);
+  },
+  create: async (data) => {
+    return await secureApi.secureRequest('/appointment-requests', { method: 'POST', body: data });
+  },
+};
