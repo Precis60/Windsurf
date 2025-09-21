@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { appointmentsService, authService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import CustomConfirmModal from '../components/CustomConfirmModal';
+import { eventCategories, getCategoryStyle } from '../utils/eventCategories';
 import '../Calendar.css';
 
 const Calendar = () => {
@@ -444,8 +445,8 @@ const Calendar = () => {
               required
               className="calendar-select"
             >
-              <option value="">Select Category</option>
-              {categories.map(category => (
+              <option value="">Select a Category</option>
+              {Object.keys(eventCategories).map(category => (
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
@@ -521,16 +522,19 @@ const Calendar = () => {
                     const hasTime = apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim();
                     console.log('Appointment filter check:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
                     return hasTime;
-                  }).map(apt => (
-                    <div key={apt.id} className="calendar-appointment" onClick={() => {
-                      setFormData(apt);
-                      setEditingAppointment(apt.id);
-                      setShowAddForm(true);
-                    }}>
-                      <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
-                      <div className="calendar-appointment-title">{apt.title}</div>
-                    </div>
-                  ))}
+                  }).map(apt => {
+                    const style = getCategoryStyle(apt.category);
+                    return (
+                      <div key={apt.id} className="calendar-appointment" style={{ backgroundColor: style.color, color: style.textColor }} onClick={() => {
+                        setFormData(apt);
+                        setEditingAppointment(apt.id);
+                        setShowAddForm(true);
+                      }}>
+                        <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
+                        <div className="calendar-appointment-title">{apt.title}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             })}
@@ -568,6 +572,7 @@ const Calendar = () => {
                         console.log('Weekly view appointment filter:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
                         return hasTime;
                       }).map(apt => {
+                        const style = getCategoryStyle(apt.category);
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
                         const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                         // Calculate position: each 15-minute slot = 15px
@@ -578,6 +583,8 @@ const Calendar = () => {
                           <div key={apt.id} className="calendar-appointment" style={{
                             top: `${startPosition}px`,
                             height: `${height}px`,
+                            backgroundColor: style.color,
+                            color: style.textColor,
                           }} onClick={() => {
                             setFormData(apt);
                             setEditingAppointment(apt.id);
@@ -622,6 +629,7 @@ const Calendar = () => {
                   console.log('Daily view appointment filter:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
                   return hasTime;
                 }).map(apt => {
+                  const style = getCategoryStyle(apt.category);
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
                   const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                   // Calculate position: each 15-minute slot = 15px
@@ -632,6 +640,8 @@ const Calendar = () => {
                     <div key={apt.id} className="calendar-appointment" style={{
                       top: `${startPosition}px`,
                       height: `${height}px`,
+                      backgroundColor: style.color,
+                      color: style.textColor,
                     }} onClick={() => {
                       setFormData(apt);
                       setEditingAppointment(apt.id);

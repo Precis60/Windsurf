@@ -390,16 +390,17 @@
 /* Appointment positioning for weekly/daily views */
 .calendar-day-body .calendar-appointment {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  background: #e3f2fd;
-  border: 1px solid #2196f3;
+  left: 2px;
+  right: 2px;
+  padding: 4px 6px;
   border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   cursor: pointer;
+  transition: background 0.2s;
   z-index: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-day-body .calendar-appointment:hover {
@@ -409,9 +410,9 @@
 
 .calendar-appointment-time {
   font-weight: 600;
-  color: #1565c0;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   margin-bottom: 2px;
+  white-space: nowrap;
 }
 
 .calendar-appointment-title {
