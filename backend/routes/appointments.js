@@ -56,7 +56,28 @@ router.get('/', authenticateToken, async (req, res) => {
     queryText += ` ORDER BY a.appointment_date ASC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
     queryParams.push(limit, offset);
 
-    const result = await query(queryText, queryParams);
+    let result;
+    try {
+      result = await query(queryText, queryParams);
+    } catch (err) {
+      // Fallback if address columns do not exist yet
+      if (err && (err.code === '42703' || /column .* does not exist/i.test(err.message))) {
+        let legacyQuery = `
+          SELECT a.id, a.title, a.description, a.appointment_date, a.duration_minutes,
+                 a.status, a.notes, a.created_at, a.updated_at,
+                 u.first_name, u.last_name, u.email, u.phone, u.company
+          FROM appointments a
+          JOIN users u ON a.customer_id = u.id
+        `;
+        if (conditions.length > 0) {
+          legacyQuery += ` WHERE ${conditions.join(' AND ')}`;
+        }
+        legacyQuery += ` ORDER BY a.appointment_date ASC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+        result = await query(legacyQuery, queryParams);
+      } else {
+        throw err;
+      }
+    }
 
     // Get total count for pagination
     let countQuery = 'SELECT COUNT(*) FROM appointments a';
