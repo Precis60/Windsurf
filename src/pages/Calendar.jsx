@@ -28,7 +28,8 @@ const Calendar = () => {
     customerId: '',
     description: '',
     category: '',
-    address: ''
+    address: '',
+    addressMeta: null
   });
 
   // Autocomplete state for client selection
@@ -140,7 +141,12 @@ const Calendar = () => {
       description: formData.description || `Client: ${formData.client}\nCategory: ${formData.category}\nAddress: ${formData.address}`,
       appointmentDate: aestDate.toISOString(),
       durationMinutes: duration,
-      customerId: Number(formData.customerId)
+      customerId: Number(formData.customerId),
+      address: formData.address || '',
+      addressPlaceId: formData.addressMeta?.placeId || null,
+      addressLat: formData.addressMeta?.lat ?? null,
+      addressLng: formData.addressMeta?.lng ?? null,
+      addressComponents: formData.addressMeta?.components || null
     };
     // Log payload and types for debugging
     console.log('Appointment payload:', appointmentData);
@@ -150,7 +156,7 @@ const Calendar = () => {
     try {
       const result = await appointmentsService.create(appointmentData);
       console.log('Appointment created successfully:', result);
-      setFormData({ title: '', date: '', time: '', endTime: '', client: '', customerId: '', description: '', category: '', address: '' });
+      setFormData({ title: '', date: '', time: '', endTime: '', client: '', customerId: '', description: '', category: '', address: '', addressMeta: null });
       setShowAddForm(false);
       // Reload appointments
       const response = await appointmentsService.getAll();
@@ -213,11 +219,16 @@ const Calendar = () => {
       ...formData,
       appointmentDate: aestDate.toISOString(),
       durationMinutes: duration,
+      address: formData.address || '',
+      addressPlaceId: formData.addressMeta?.placeId || null,
+      addressLat: formData.addressMeta?.lat ?? null,
+      addressLng: formData.addressMeta?.lng ?? null,
+      addressComponents: formData.addressMeta?.components || null,
     };
 
     try {
       await appointmentsService.update(editingAppointment, appointmentData);
-      setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' });
+      setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '', addressMeta: null });
       setEditingAppointment(null);
       setShowAddForm(false);
       // Reload appointments
@@ -358,7 +369,7 @@ const Calendar = () => {
         <div className="calendar-card">
           <h3>Appointment Management</h3>
           <p>View and manage appointments, clients, and schedules.</p>
-          <button className="calendar-btn-main" onClick={() => { setShowAddForm(!showAddForm); setEditingAppointment(null); setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '' }); }}>
+          <button className="calendar-btn-main" onClick={() => { setShowAddForm(!showAddForm); setEditingAppointment(null); setFormData({ title: '', date: '', time: '', endTime: '', client: '', description: '', category: '', address: '', addressMeta: null }); }}>
             {showAddForm ? 'Cancel' : 'Add New Appointment'}
           </button>
         </div>
