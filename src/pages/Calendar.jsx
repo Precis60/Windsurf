@@ -485,6 +485,7 @@ const Calendar = () => {
                 setFormData({ ...formData, address: val, addressMeta: payload });
               }}
               placeholder="Start typing an Australian address…"
+              showTip={false}
             />
             <textarea
               placeholder="Description"

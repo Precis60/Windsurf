@@ -40,7 +40,7 @@ function loadGoogleMaps(apiKey) {
  *   - placeholder?: string
  *   - required?: boolean
  */
-export default function AddressAutocomplete({ label = 'Address/Location', value, onChange, placeholder = 'Start typing an address…', required = false }) {
+export default function AddressAutocomplete({ label = 'Address/Location', value, onChange, placeholder = 'Start typing an address…', required = false, showTip = true }) {
   const inputRef = useRef(null);
   const autocompleteRef = useRef(null);
   const [ready, setReady] = useState(false);
@@ -99,7 +99,7 @@ export default function AddressAutocomplete({ label = 'Address/Location', value,
         required={required}
         aria-invalid={required && !value ? 'true' : 'false'}
       />
-      {!apiKey && (
+      {!apiKey && showTip && (
         <div style={{ color: '#6c757d', fontSize: '0.85rem', marginTop: '0.25rem' }}>
           Tip: Add VITE_GOOGLE_MAPS_API_KEY to enable Australian address autocomplete.
         </div>
