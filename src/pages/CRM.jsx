@@ -24,7 +24,7 @@ const CRM = () => {
     city: '',
     state: '',
     zipCode: '',
-    projectType: '',
+    clientType: '',
     notes: '',
     password: '' // Added password field
   });
@@ -201,7 +201,7 @@ const CRM = () => {
         city: '',
         state: '',
         zipCode: '',
-        projectType: '',
+        clientType: '',
         notes: ''
       });
       setEditingCustomer(null);
@@ -260,7 +260,7 @@ const CRM = () => {
       city: city,
       state: state,
       zipCode: zipCode,
-      projectType: customer.projectType || '',
+      clientType: customer.clientType || '',
       notes: customer.notes || ''
     });
     setEditingCustomer(customer.id);
@@ -384,16 +384,13 @@ const CRM = () => {
                 <input type="text" placeholder="City" value={customerForm.city} onChange={e => setCustomerForm({ ...customerForm, city: e.target.value })} />
                 <input type="text" placeholder="State" value={customerForm.state} onChange={e => setCustomerForm({ ...customerForm, state: e.target.value })} />
                 <input type="text" placeholder="ZIP Code" value={customerForm.zipCode} onChange={e => setCustomerForm({ ...customerForm, zipCode: e.target.value })} />
-                <select value={customerForm.projectType} onChange={e => setCustomerForm({ ...customerForm, projectType: e.target.value })}>
-                  <option value="">Select Project Type</option>
-                  <option value="Network Infrastructure">Network Infrastructure</option>
-                  <option value="Cable Installation">Cable Installation</option>
-                  <option value="Equipment Setup">Equipment Setup</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Consultation">Consultation</option>
-                  <option value="System Integration">System Integration</option>
-                  <option value="Upgrade">Upgrade</option>
-                  <option value="Emergency Service">Emergency Service</option>
+                <select value={customerForm.clientType} onChange={e => setCustomerForm({ ...customerForm, clientType: e.target.value })}>
+                  <option value="">Select Client Type</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="High End">High End</option>
+                  <option value="Low End">Low End</option>
+                  <option value="Residential">Residential</option>
+                  <option value="Prospective">Prospective</option>
                 </select>
                 <textarea placeholder="Notes (optional)" value={customerForm.notes} onChange={e => setCustomerForm({ ...customerForm, notes: e.target.value })} />
                 {formMessage.text && (
