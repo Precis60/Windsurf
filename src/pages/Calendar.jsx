@@ -127,6 +127,13 @@ const Calendar = () => {
         } else {
           errorMessage += JSON.stringify(error.response.data.error);
         }
+        // Show validation details if present
+        if (error.response.data.error.details) {
+          errorMessage += '\nDetails:';
+          error.response.data.error.details.forEach((d) => {
+            errorMessage += `\n- ${d.path}: ${d.msg} (value: ${d.value})`;
+          });
+        }
       } else if (error.message) {
         errorMessage += error.message;
       }
