@@ -8,6 +8,7 @@ const Login = ({ onLogin }) => {
     password: ''
   });
   const [error, setError] = useState('');
+  const [debugUser, setDebugUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -26,6 +27,7 @@ const Login = ({ onLogin }) => {
 
     try {
       const result = await authService.login(formData.email, formData.password);
+      setDebugUser(result.user); // Display user object for debugging
       onLogin(result);
       // Role-based redirection
       if (authService.isAdmin()) {
@@ -210,6 +212,15 @@ const Login = ({ onLogin }) => {
             ⚠️ Change this password after first login
           </p>
         </div>
+
+        {debugUser && (
+          <div style={{ marginTop: '20px', padding: '15px', background: '#fff3cd', borderRadius: '8px', border: '1px solid #ffeeba' }}>
+            <h4 style={{ margin: '0 0 10px 0', color: '#856404' }}>Debug Info: User Object</h4>
+            <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: '12px' }}>
+              {JSON.stringify(debugUser, null, 2)}
+            </pre>
+          </div>
+        )}
 
         <div style={{
           textAlign: 'center',
