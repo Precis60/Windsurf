@@ -111,7 +111,7 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
           >
             <defs>
               {/* Arrowhead for Hour Hand */}
-                            <marker id="hour-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+                            <marker id="hour-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="1.5" markerHeight="1.5" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill={mode === 'hour' ? '#22314a' : '#aaa'} />
               </marker>
               {/* Arrowhead for Minute Hand */}
@@ -133,8 +133,8 @@ const AnalogTimePicker = ({ value, onChange, label }) => {
             <line
               x1="50"
               y1="50"
-              x2={50 + 25 * Math.cos(hourAngle * Math.PI / 180)}
-              y2={50 + 25 * Math.sin(hourAngle * Math.PI / 180)}
+              x2={50 + 9 * Math.cos(hourAngle * Math.PI / 180)}
+              y2={50 + 9 * Math.sin(hourAngle * Math.PI / 180)}
               stroke={mode === 'hour' ? '#22314a' : '#aaa'}
               strokeWidth={mode === 'hour' ? '3' : '1'}
               markerEnd="url(#hour-arrow)"
