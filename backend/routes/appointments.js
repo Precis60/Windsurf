@@ -17,7 +17,7 @@ router.get('/', authenticateToken, async (req, res) => {
              a.address, a.address_place_id, a.address_lat, a.address_lng, a.address_components,
              u.first_name, u.last_name, u.email, u.phone, u.company
       FROM appointments a
-      JOIN users u ON a.customer_id = u.id
+      LEFT JOIN users u ON a.customer_id = u.id
     `;
     
     const queryParams = [];
@@ -67,7 +67,7 @@ router.get('/', authenticateToken, async (req, res) => {
                  a.status, a.notes, a.created_at, a.updated_at,
                  u.first_name, u.last_name, u.email, u.phone, u.company
           FROM appointments a
-          JOIN users u ON a.customer_id = u.id
+          LEFT JOIN users u ON a.customer_id = u.id
         `;
         if (conditions.length > 0) {
           legacyQuery += ` WHERE ${conditions.join(' AND ')}`;
