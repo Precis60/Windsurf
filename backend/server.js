@@ -12,6 +12,7 @@ import customerRoutes from './routes/customers.js';
 import appointmentRoutes from './routes/appointments.js';
 import projectRoutes from './routes/projects.js';
 import supportRoutes from './routes/support.js';
+import calendarRoutes from './routes/calendar.js';
 
 // Load environment variables
 dotenv.config();
@@ -105,6 +106,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/support', supportRoutes);
+app.use('/api/calendar', calendarRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

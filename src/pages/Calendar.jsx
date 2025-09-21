@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { appointmentsService, authService, customersService } from '../services/secureApi';
+import { appointmentsService, authService, calendarService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import AddressAutocomplete from '../components/AddressAutocomplete';
 import CustomConfirmModal from '../components/CustomConfirmModal';
@@ -101,8 +101,8 @@ const Calendar = () => {
           console.log('Transformed appointments:', transformedAppointments);
           setAppointments(transformedAppointments);
           
-          // Load customers
-          const customersResponse = await customersService.getAll();
+          // Load customers (minimal set for calendar)
+          const customersResponse = await calendarService.getCalendarCustomers();
           const customerList = Array.isArray(customersResponse) ? customersResponse : customersResponse.customers || [];
           setCustomers(customerList);
         } catch (error) {

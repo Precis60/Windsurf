@@ -494,3 +494,11 @@ export const supportService = {
   getTickets: () => secureApi.getSupportTickets(),
   createTicket: (data) => secureApi.createSupportTicket(data),
 };
+
+// Calendar helper services
+export const calendarService = {
+  getCalendarCustomers: async (search = '') => {
+    const params = search ? `?search=${encodeURIComponent(search)}` : '';
+    return await secureApi.secureRequest(`/calendar/customers${params}`);
+  },
+};
