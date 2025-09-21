@@ -18,6 +18,12 @@ const ClientPortal = () => {
     addressMeta: null,
   });
 
+  const [supportForm, setSupportForm] = useState({
+    subject: '',
+    description: '',
+    priority: 'medium'
+  });
+
   const timeZone = 'Australia/Sydney';
 
   const calculateDurationMinutes = (startTime, endTime) => {
@@ -75,6 +81,33 @@ const ClientPortal = () => {
     }
   };
 
+  const handleSubmitSupportTicket = async (e) => {
+    e.preventDefault();
+    if (!supportForm.subject.trim() || !supportForm.description.trim()) {
+      alert('Please fill in both subject and description.');
+      return;
+    }
+    
+    const payload = {
+      subject: supportForm.subject.trim(),
+      description: supportForm.description.trim(),
+      priority: supportForm.priority,
+      status: 'open'
+    };
+    
+    try {
+      await supportService.createTicket(payload);
+      alert('Your support ticket has been submitted successfully. We will respond soon.');
+      setSupportForm({ subject: '', description: '', priority: 'medium' });
+      // Reload tickets to show the new one
+      const t = await supportService.getTickets();
+      setTickets(Array.isArray(t) ? t : t.tickets || []);
+    } catch (err) {
+      console.error('Submit support ticket error:', err);
+      alert(err?.message || 'Failed to submit support ticket');
+    }
+  };
+
   if (!authService.isAuthenticated()) {
     return (
       <div className="page-content" style={{ padding: '2rem', maxWidth: 700, margin: '0 auto' }}>
@@ -88,12 +121,12 @@ const ClientPortal = () => {
   return (
     <div className="page-content" style={{ padding: '2rem', maxWidth: 1200, margin: '0 auto' }}>
       <h1 style={{ color: '#22314a' }}>Client Portal</h1>
-      <p>View your support tickets and request a tentative appointment for a site visit.</p>
+      <p>View your support tickets, submit new support requests, and request tentative appointments for site visits.</p>
 
       {loading ? (
         <div>Loading...</div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
           <div>
             <h2 style={{ color: '#22314a' }}>Your Support Tickets</h2>
             {tickets.length === 0 ? (
@@ -129,6 +162,44 @@ const ClientPortal = () => {
                 ))}
               </div>
             )}
+          </div>
+
+          <div>
+            <h2 style={{ color: '#22314a' }}>Submit Support Ticket</h2>
+            <form onSubmit={handleSubmitSupportTicket} style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+              <input 
+                className="calendar-input" 
+                type="text" 
+                placeholder="Subject" 
+                value={supportForm.subject} 
+                onChange={e => setSupportForm({ ...supportForm, subject: e.target.value })} 
+                required 
+                style={{ marginBottom: '1rem' }}
+              />
+              <textarea 
+                className="calendar-textarea" 
+                placeholder="Describe your issue or question in detail..." 
+                value={supportForm.description} 
+                onChange={e => setSupportForm({ ...supportForm, description: e.target.value })} 
+                required
+                rows={6}
+                style={{ marginBottom: '1rem' }}
+              />
+              <select 
+                className="calendar-select" 
+                value={supportForm.priority} 
+                onChange={e => setSupportForm({ ...supportForm, priority: e.target.value })}
+                style={{ marginBottom: '1rem' }}
+              >
+                <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="high">High Priority</option>
+                <option value="urgent">Urgent</option>
+              </select>
+              <button className="calendar-btn-main" type="submit" style={{ width: '100%' }}>
+                Submit Support Ticket
+              </button>
+            </form>
           </div>
 
           <div>
