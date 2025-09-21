@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { authService } from '../services/secureApi';
+import { authService, appointmentRequestService } from '../services/secureApi';
 
 const Portal = () => {
   // Authentication state
@@ -14,6 +14,7 @@ const Portal = () => {
     confirmPassword: ''
   });
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [pendingRequests, setPendingRequests] = useState(0);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -54,6 +55,16 @@ const Portal = () => {
     };
     
     checkAuth();
+    // Load pending appointment requests count for staff/admin
+    try {
+      const user = authService.getCurrentUser?.();
+      if (user && (user.role === 'admin' || user.role === 'staff')) {
+        appointmentRequestService.getAll('?status=pending').then(r => {
+          const list = Array.isArray(r) ? r : r.requests || [];
+          setPendingRequests(list.length || 0);
+        }).catch(() => setPendingRequests(0));
+      }
+    } catch {}
   }, []);
 
   // Button styles
@@ -177,7 +188,14 @@ const Portal = () => {
   return (
     <div className="page-content" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h1 style={{ color: '#22314a', margin: 0 }}>Client & Staff Portal</h1>
+        <h1 style={{ color: '#22314a', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+          Company Portal
+          {pendingRequests > 0 && (
+            <span style={{ background: '#e11d48', color: '#fff', borderRadius: 999, padding: '2px 8px', fontSize: 12 }} title="Pending appointment requests">
+              {pendingRequests}
+            </span>
+          )}
+        </h1>
         <button 
           onClick={() => {
             authService.logout();
@@ -189,7 +207,7 @@ const Portal = () => {
           Logout
         </button>
       </div>
-      <p style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>Secure access to project documents, invoices, and communication tools.</p>
+      <p style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>Internal tools for staff and administrators: projects, calendar, tickets, and more.</p>
     
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>

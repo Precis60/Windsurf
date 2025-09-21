@@ -518,4 +518,7 @@ export const appointmentRequestService = {
   create: async (data) => {
     return await secureApi.secureRequest('/appointment-requests', { method: 'POST', body: data });
   },
+  update: async (id, data) => {
+    return await secureApi.secureRequest(`/appointment-requests/${id}`, { method: 'PUT', body: data });
+  },
 };

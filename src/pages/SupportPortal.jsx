@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { supportService, authService } from '../services/secureApi';
+import { supportService, authService, appointmentRequestService } from '../services/secureApi';
 
 const SupportPortal = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('tickets');
+  const [requests, setRequests] = useState([]);
+  const [reqLoading, setReqLoading] = useState(false);
   const [showNewTicketForm, setShowNewTicketForm] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [newTicket, setNewTicket] = useState({
@@ -19,6 +21,7 @@ const SupportPortal = () => {
 
   useEffect(() => {
     loadTickets();
+    if (isStaff) loadRequests();
   }, []);
 
   const loadTickets = async () => {
@@ -32,6 +35,32 @@ const SupportPortal = () => {
       setTickets([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRequests = async () => {
+    try {
+      setReqLoading(true);
+      const r = await appointmentRequestService.getAll('?status=pending');
+      const list = Array.isArray(r) ? r : r.requests || [];
+      setRequests(list);
+    } catch (e) {
+      console.error('Error loading appointment requests:', e);
+      setRequests([]);
+    } finally {
+      setReqLoading(false);
+    }
+  };
+
+  const moderateRequest = async (id, decision, createAppointment) => {
+    try {
+      await appointmentRequestService.update(id, { status: decision, createAppointment: !!createAppointment });
+      await loadRequests();
+      if (decision === 'approved') alert('Request approved' + (createAppointment ? ' and appointment created.' : '.'));
+      else alert('Request declined.');
+    } catch (e) {
+      console.error('Moderation failed:', e);
+      alert(e?.message || 'Failed to update request');
     }
   };
 
@@ -160,6 +189,23 @@ const SupportPortal = () => {
         >
           📚 Knowledge Base
         </button>
+        {isStaff && (
+          <button
+            onClick={() => setActiveTab('requests')}
+            style={{
+              padding: '12px 24px',
+              border: 'none',
+              background: activeTab === 'requests' ? '#9f7aea' : 'transparent',
+              color: activeTab === 'requests' ? 'white' : '#666',
+              borderRadius: '8px 8px 0 0',
+              cursor: 'pointer',
+              fontWeight: '500',
+              marginLeft: 'auto'
+            }}
+          >
+            🗓️ Appointment Requests
+          </button>
+        )}
       </div>
 
       {/* Support Tickets Tab */}
@@ -291,6 +337,40 @@ const SupportPortal = () => {
               ))}
             </div>
           )}
+
+      {/* Appointment Requests Moderation (Staff/Admin) */}
+      {isStaff && activeTab === 'requests' && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h2 style={{ margin: 0, color: '#22314a' }}>Pending Appointment Requests</h2>
+            <button onClick={loadRequests} style={{ background: '#9f7aea', color: 'white', border: 'none', padding: '8px 16px', borderRadius: 8, cursor: 'pointer' }}>Refresh</button>
+          </div>
+          {reqLoading ? (
+            <div style={{ textAlign: 'center', padding: 20, color: '#666' }}>Loading requests...</div>
+          ) : requests.length === 0 ? (
+            <div style={{ background: 'white', padding: 20, borderRadius: 12, border: '1px solid #e1e5e9', textAlign: 'center' }}>No pending requests.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: 12 }}>
+              {requests.map(r => (
+                <div key={r.id} style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e1e5e9' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <strong>{r.title}</strong>
+                      <div style={{ color: '#666', fontSize: 13 }}>{new Date(r.requestedDate).toLocaleString('en-AU')}</div>
+                      {r.address && <div style={{ color: '#666', fontSize: 13 }}>📍 {r.address}</div>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button onClick={() => moderateRequest(r.id, 'approved', true)} style={{ background: '#4caf50', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>Approve & Create</button>
+                      <button onClick={() => moderateRequest(r.id, 'approved', false)} style={{ background: '#2e7d32', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>Approve Only</button>
+                      <button onClick={() => moderateRequest(r.id, 'declined', false)} style={{ background: '#f44336', color: 'white', border: 'none', padding: '8px 12px', borderRadius: 6, cursor: 'pointer' }}>Decline</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
         </div>
       )}
 
