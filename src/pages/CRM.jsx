@@ -95,8 +95,8 @@ const CRM = () => {
       setSubmitting(false);
       return;
     }
-    if (!customerForm.password || customerForm.password.length < 6) {
-      setFormMessage({ type: 'error', text: 'Please enter a password (min 6 characters).' });
+    if (!customerForm.password || customerForm.password.length < 8) {
+      setFormMessage({ type: 'error', text: 'Please enter a password (min 8 characters).' });
       setSubmitting(false);
       return;
     }
@@ -374,7 +374,7 @@ const CRM = () => {
                 <input type="text" placeholder="First Name" value={customerForm.firstName} onChange={e => setCustomerForm({ ...customerForm, firstName: e.target.value })} required />
                 <input type="text" placeholder="Last Name" value={customerForm.lastName} onChange={e => setCustomerForm({ ...customerForm, lastName: e.target.value })} required />
                 <input type="email" placeholder="Email Address" value={customerForm.email} onChange={e => setCustomerForm({ ...customerForm, email: e.target.value })} required />
-                <input type="password" placeholder="Password (min 6 chars)" value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} required />
+                <input type="password" placeholder="Password (min 8 chars)" value={customerForm.password} onChange={e => setCustomerForm({ ...customerForm, password: e.target.value })} required />
                 <input type="tel" placeholder="Phone Number" value={customerForm.phone} onChange={e => setCustomerForm({ ...customerForm, phone: e.target.value })} />
                 <input type="text" placeholder="Street Address" value={customerForm.address} onChange={e => setCustomerForm({ ...customerForm, address: e.target.value })} />
                 <input type="text" placeholder="City" value={customerForm.city} onChange={e => setCustomerForm({ ...customerForm, city: e.target.value })} />
