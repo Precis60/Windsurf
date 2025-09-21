@@ -47,10 +47,18 @@ router.post('/register', [
 
     const user = result.rows[0];
 
-    // Generate JWT token
+    // Generate JWT token with safe fallback to avoid 500 if JWT_SECRET is missing
+    const jwtSecret = process.env.JWT_SECRET || 'dev-fallback-jwt-secret-change-me';
+    if (!process.env.JWT_SECRET) {
+      // One-time warning per process
+      if (!global.__JWT_SECRET_WARNED__) {
+        console.warn('⚠️  JWT_SECRET is not set. Using fallback secret. Set JWT_SECRET in environment for production.');
+        global.__JWT_SECRET_WARNED__ = true;
+      }
+    }
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: '24h' }
     );
 
@@ -121,10 +129,17 @@ router.post('/login', [
     // Update last login
     await query('UPDATE users SET last_login = NOW() WHERE id = $1', [user.id]);
 
-    // Generate JWT token
+    // Generate JWT token with safe fallback to avoid 500 if JWT_SECRET is missing
+    const jwtSecret = process.env.JWT_SECRET || 'dev-fallback-jwt-secret-change-me';
+    if (!process.env.JWT_SECRET) {
+      if (!global.__JWT_SECRET_WARNED__) {
+        console.warn('⚠️  JWT_SECRET is not set. Using fallback secret. Set JWT_SECRET in environment for production.');
+        global.__JWT_SECRET_WARNED__ = true;
+      }
+    }
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      jwtSecret,
       { expiresIn: '24h' }
     );
 
