@@ -1,1 +1,0 @@
-import{j as o}from"./index-Dgj-CLL8.js";import"./vendor-DR4o8xae.js";const n=()=>o.jsxs("div",{className:"page-content",children:[o.jsx("h1",{children:"Welcome to Precision Cabling & Automation"}),o.jsx("p",{children:"Your trusted partner for cabling, automation, and technology solutions."})]});export{n as default};
