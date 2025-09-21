@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { appointmentsService, authService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
+import AddressAutocomplete from '../components/AddressAutocomplete';
 import CustomConfirmModal from '../components/CustomConfirmModal';
 import { eventCategories, getCategoryStyle } from '../utils/eventCategories';
 import '../Calendar.css';
@@ -450,12 +451,13 @@ const Calendar = () => {
                 <option key={category} value={category}>{category}</option>
               ))}
             </select>
-            <input
-              type="text"
-              placeholder="Address/Location"
+            <AddressAutocomplete
+              label="Address/Location"
               value={formData.address}
-              onChange={(e) => setFormData({...formData, address: e.target.value})}
-              className="calendar-input"
+              onChange={(val, payload) => {
+                setFormData({ ...formData, address: val, addressMeta: payload });
+              }}
+              placeholder="Start typing an Australian address…"
             />
             <textarea
               placeholder="Description"
