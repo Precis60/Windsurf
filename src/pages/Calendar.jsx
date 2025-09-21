@@ -256,43 +256,36 @@ const Calendar = () => {
     }
   };
 
-  // Get appointments for a specific date
+  // Get appointments for a specific date, ensuring time zone correctness
   const getAppointmentsForDate = (date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    console.log('Looking for appointments on date:', dateStr);
-    console.log('All appointments:', appointments);
-    
+    // The 'date' from the calendar grid is a local date. Format it to an AEST date string.
+    const calendarDateStr = format(utcToZonedTime(date, timeZone), 'yyyy-MM-dd');
+
     const filtered = appointments.filter(apt => {
-      // Handle both old format (apt.date) and new backend format (apt.appointmentDate)
-      const appointmentDate = apt.appointmentDate || apt.date;
-      console.log('Checking appointment:', apt.id, 'appointmentDate:', appointmentDate);
-      
-      if (!appointmentDate) {
-        console.log('No appointment date found for appointment:', apt);
+      // The appointment's 'date' field is already a pre-formatted AEST date string from our transform function.
+      if (!apt.date) {
         return false;
       }
-      
-      // Extract date part from ISO string
-      const aptDateStr = appointmentDate.split('T')[0];
-      const matches = aptDateStr === dateStr;
-      console.log('Date comparison:', aptDateStr, 'vs', dateStr, '=', matches);
-      
-      return matches;
+      return apt.date === calendarDateStr;
     });
-    
-    console.log('Filtered appointments for', dateStr, ':', filtered);
+
     return filtered;
   };
 
-  // Generate calendar days for monthly view
+  // Generate calendar days for monthly view, AEST-aware
   const generateMonthlyCalendar = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-    
+    const zonedCurrentDate = utcToZonedTime(currentDate, timeZone);
+    const year = zonedCurrentDate.getFullYear();
+    const month = zonedCurrentDate.getMonth();
+
+    // Get the first day of the month in AEST
+    let firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+    firstDayOfMonth = utcToZonedTime(firstDayOfMonth, timeZone);
+
+    // Find the start of the calendar grid (could be in the previous month)
+    let startDate = new Date(firstDayOfMonth);
+    startDate.setDate(startDate.getDate() - firstDayOfMonth.getDay());
+
     const days = [];
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
@@ -302,11 +295,14 @@ const Calendar = () => {
     return days;
   };
 
-  // Generate week days for weekly view
+  // Generate week days for weekly view, AEST-aware
   const generateWeeklyCalendar = () => {
-    const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+    const zonedCurrentDate = utcToZonedTime(currentDate, timeZone);
     
+    // Find the start of the week in AEST
+    const startOfWeek = new Date(zonedCurrentDate);
+    startOfWeek.setDate(zonedCurrentDate.getDate() - zonedCurrentDate.getDay());
+
     const days = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
@@ -494,9 +490,9 @@ const Calendar = () => {
         <div className="calendar-nav-header">
           <button onClick={() => navigateDate(-1)} className="calendar-nav-btn">‹ Previous</button>
           <h3 className="calendar-nav-title">
-            {currentView === 'monthly' && currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-            {currentView === 'weekly' && `Week of ${currentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
-            {currentView === 'daily' && currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+            {currentView === 'monthly' && format(utcToZonedTime(currentDate, timeZone), 'MMMM yyyy', { timeZone })}
+            {currentView === 'weekly' && `Week of ${format(utcToZonedTime(currentDate, timeZone), 'MMM d, yyyy', { timeZone })}`}
+            {currentView === 'daily' && format(utcToZonedTime(currentDate, timeZone), 'eeee, MMMM d, yyyy', { timeZone })}
           </h3>
           <button onClick={() => navigateDate(1)} className="calendar-nav-btn">Next ›</button>
           <div className="calendar-view-switcher">
