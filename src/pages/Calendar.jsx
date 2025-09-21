@@ -119,11 +119,19 @@ const Calendar = () => {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
       console.error('Full error object:', JSON.stringify(error, null, 2));
-      
       let errorMessage = 'Failed to add appointment. ';
-      
+      // Show backend error details if available
+      if (error.response && error.response.data && error.response.data.error) {
+        if (typeof error.response.data.error === 'string') {
+          errorMessage += error.response.data.error;
+        } else if (error.response.data.error.message) {
+          errorMessage += error.response.data.error.message;
+        } else {
+          errorMessage += JSON.stringify(error.response.data.error);
+        }
+      }
       // Check for specific error types
-      if (error.message.includes('Authentication required')) {
+      else if (error.message.includes('Authentication required')) {
         errorMessage += 'Please log in again.';
         window.location.href = '/login';
         return;
@@ -142,7 +150,6 @@ const Calendar = () => {
       } else {
         errorMessage += `Error: ${error.message}`;
       }
-      
       // Show detailed error in console for debugging
       console.log('=== APPOINTMENT CREATION ERROR DEBUG ===');
       console.log('Appointment data being sent:', appointmentData);
@@ -152,7 +159,6 @@ const Calendar = () => {
       console.log('Current auth status:', authService.isAuthenticated());
       console.log('Backend URL:', process.env.NODE_ENV === 'production' ? 'https://precision-cabling-backend.onrender.com/api' : 'http://localhost:3001/api');
       console.log('=====================================');
-      
       alert(errorMessage);
     }
   };
