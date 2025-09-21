@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+  import React, { useState, useEffect } from "react";
 import { appointmentsService, authService, calendarService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import AddressAutocomplete from '../components/AddressAutocomplete';
@@ -212,8 +212,10 @@ const Calendar = () => {
 
   // Edit appointment
   const handleEditAppointment = (appointment) => {
+    const mapped = prepareFormDataFromAppointment(appointment);
     setEditingAppointment(appointment.id);
-    setFormData(appointment);
+    setFormData(mapped);
+    setClientSearch(mapped.client || '');
     setShowAddForm(true);
   };
 
@@ -226,16 +228,25 @@ const Calendar = () => {
     const aestDate = new Date(localDateTimeString);
     const duration = calculateDurationMinutes(formData.time, formData.endTime);
 
+    // Build an update payload that preserves existing details by not overwriting
+    // address metadata unless the user actually selected a new address (addressMeta present)
     const appointmentData = {
-      ...formData,
+      title: formData.title,
+      description: formData.description,
       appointmentDate: aestDate.toISOString(),
       durationMinutes: duration,
+      // keep the selected customer link
+      customerId: Number(formData.customerId),
+      // always carry the human-readable address text
       address: formData.address || '',
-      addressPlaceId: formData.addressMeta?.placeId || null,
-      addressLat: formData.addressMeta?.lat ?? null,
-      addressLng: formData.addressMeta?.lng ?? null,
-      addressComponents: formData.addressMeta?.components || null,
+      category: formData.category || '',
     };
+    if (formData.addressMeta) {
+      appointmentData.addressPlaceId = formData.addressMeta.placeId || null;
+      appointmentData.addressLat = formData.addressMeta.lat ?? null;
+      appointmentData.addressLng = formData.addressMeta.lng ?? null;
+      appointmentData.addressComponents = formData.addressMeta.components || null;
+    }
 
     try {
       await appointmentsService.update(editingAppointment, appointmentData);
@@ -255,6 +266,25 @@ const Calendar = () => {
 
   // Modal state for confirmation
   const [confirmModal, setConfirmModal] = useState({ open: false, id: null });
+
+  // Map an appointment from API into our form shape while preserving existing details
+  const prepareFormDataFromAppointment = (apt) => {
+    const clientName = apt.client || (apt.customer ? `${apt.customer.firstName || ''} ${apt.customer.lastName || ''}`.trim() : '') || '';
+    return {
+      title: apt.title || '',
+      date: apt.date || '',
+      time: apt.time || '',
+      endTime: apt.endTime || '',
+      client: clientName,
+      customerId: apt.customerId || apt.customer?.id || '',
+      description: apt.description || '',
+      category: apt.category || '',
+      address: apt.address || '',
+      addressMeta: null, // will be set only if user selects a new address from autocomplete
+      id: apt.id,
+      appointmentDate: apt.appointmentDate
+    };
+  };
 
   // Delete appointment from secure API (custom modal)
   const handleDeleteAppointment = async (id) => {
@@ -419,13 +449,11 @@ const Calendar = () => {
                 onChange={e => {
                   setClientSearch(e.target.value);
                   setShowClientDropdown(true);
-                  setFormData({ ...formData, client: e.target.value, customerId: '' });
+                  // Update visible client name but do not clear existing customerId unless user selects a different one
+                  setFormData({ ...formData, client: e.target.value });
                 }}
                 onBlur={() => {
                   setTimeout(() => setShowClientDropdown(false), 200);
-                  // If the typed value does not match a customer, clear customerId
-                  const match = customers.find(c => `${c.firstName} ${c.lastName}`.toLowerCase() === clientSearch.toLowerCase());
-                  if (!match) setFormData(f => ({ ...f, customerId: '' }));
                 }}
                 onFocus={() => setShowClientDropdown(true)}
                 autoComplete="off"
@@ -556,9 +584,7 @@ const Calendar = () => {
                     const style = getCategoryStyle(apt.category);
                     return (
                       <div key={apt.id} className="calendar-appointment" style={{ backgroundColor: style.color, color: style.textColor }} onClick={() => {
-                        setFormData(apt);
-                        setEditingAppointment(apt.id);
-                        setShowAddForm(true);
+                        handleEditAppointment(apt);
                       }}>
                         <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
                         <div className="calendar-appointment-title">{apt.title}</div>
@@ -616,9 +642,7 @@ const Calendar = () => {
                             backgroundColor: style.color,
                             color: style.textColor,
                           }} onClick={() => {
-                            setFormData(apt);
-                            setEditingAppointment(apt.id);
-                            setShowAddForm(true);
+                            handleEditAppointment(apt);
                           }}>
                             <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
                             <div className="calendar-appointment-title">{apt.title}</div>
@@ -673,9 +697,7 @@ const Calendar = () => {
                       backgroundColor: style.color,
                       color: style.textColor,
                     }} onClick={() => {
-                      setFormData(apt);
-                      setEditingAppointment(apt.id);
-                      setShowAddForm(true);
+                      handleEditAppointment(apt);
                     }}>
                       <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
                       <div className="calendar-appointment-title">{apt.title}</div>

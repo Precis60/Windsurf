@@ -15,6 +15,7 @@ router.get('/', authenticateToken, async (req, res) => {
       SELECT a.id, a.title, a.description, a.appointment_date, a.duration_minutes,
              a.status, a.notes, a.created_at, a.updated_at,
              a.address, a.address_place_id, a.address_lat, a.address_lng, a.address_components,
+             a.customer_id,
              u.first_name, u.last_name, u.email, u.phone, u.company
       FROM appointments a
       LEFT JOIN users u ON a.customer_id = u.id
@@ -65,6 +66,7 @@ router.get('/', authenticateToken, async (req, res) => {
         let legacyQuery = `
           SELECT a.id, a.title, a.description, a.appointment_date, a.duration_minutes,
                  a.status, a.notes, a.created_at, a.updated_at,
+                 a.customer_id,
                  u.first_name, u.last_name, u.email, u.phone, u.company
           FROM appointments a
           LEFT JOIN users u ON a.customer_id = u.id
@@ -109,6 +111,7 @@ router.get('/', authenticateToken, async (req, res) => {
         durationMinutes: appointment.duration_minutes,
         status: appointment.status,
         notes: appointment.notes,
+        customerId: appointment.customer_id,
         address: appointment.address,
         addressPlaceId: appointment.address_place_id,
         addressLat: appointment.address_lat,
