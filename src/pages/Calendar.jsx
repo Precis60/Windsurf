@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { appointmentsService, authService, customersService } from '../services/secureApi';
 import AnalogTimePicker from '../components/AnalogTimePicker';
 import CustomConfirmModal from '../components/CustomConfirmModal';
-import './Calendar.css';
+import '../Calendar.css';
 
 const Calendar = () => {
   // Authentication state
