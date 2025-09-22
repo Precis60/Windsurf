@@ -189,7 +189,7 @@ class SecureApiService {
       return { appointments };
     }
     
-    return await this.secureRequest('/appointments');
+    return await this.secureRequest('/appointments?limit=100');
   }
 
   async createAppointment(appointmentData) {
