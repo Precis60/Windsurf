@@ -12,7 +12,16 @@ export const authenticateToken = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Use same JWT secret fallback as in auth routes
+    const jwtSecret = process.env.JWT_SECRET || 'dev-fallback-jwt-secret-change-me';
+    if (!process.env.JWT_SECRET) {
+      if (!global.__JWT_SECRET_WARNED__) {
+        console.warn('⚠️  JWT_SECRET is not set. Using fallback secret. Set JWT_SECRET in environment for production.');
+        global.__JWT_SECRET_WARNED__ = true;
+      }
+    }
+    
+    const decoded = jwt.verify(token, jwtSecret);
     
     // Verify user still exists in database
     const result = await query(
