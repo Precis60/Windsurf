@@ -70,7 +70,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'Precision Cabling & Automation API is running',
-    version: '2.1.1-cors-fix',
+    version: '2.1.2-admin-fix',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -92,6 +92,40 @@ app.post('/api/init-db', async (req, res) => {
         message: 'Database initialization failed',
         details: error.message
       }
+    });
+  }
+});
+
+// Emergency admin reset endpoint
+app.post('/api/emergency-admin-reset', async (req, res) => {
+  try {
+    const bcrypt = (await import('bcrypt')).default;
+    const { query } = await import('./config/database.js');
+    
+    // Hash the default admin password
+    const hashedPassword = await bcrypt.hash('Admin123!', 12);
+    
+    // Update or insert admin user
+    await query(`
+      INSERT INTO users (email, password_hash, first_name, last_name, role, is_active) 
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (email) 
+      DO UPDATE SET 
+        password_hash = EXCLUDED.password_hash,
+        is_active = true,
+        updated_at = NOW()
+    `, ['admin@precisioncabling.com', hashedPassword, 'Admin', 'User', 'admin', true]);
+    
+    res.json({ 
+      status: 'OK', 
+      message: 'Admin account reset successfully',
+      email: 'admin@precisioncabling.com',
+      password: 'Admin123!'
+    });
+  } catch (error) {
+    console.error('Admin reset failed:', error);
+    res.status(500).json({ 
+      error: { message: 'Admin reset failed', details: error.message } 
     });
   }
 });
