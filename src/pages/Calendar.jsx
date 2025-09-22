@@ -699,17 +699,24 @@ const Calendar = () => {
               return (
                 <div key={index} className={`calendar-day ${!isCurrentMonth ? 'calendar-day-muted' : ''} ${isToday ? 'calendar-day-today' : ''}`}>
                   <div className="calendar-day-date">{date.getDate()}</div>
-                  {dayAppointments.filter(apt => {
-                    const hasTime = apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim();
-                    console.log('Appointment filter check:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
-                    return hasTime;
+                  {dayAppointments.map(apt => {
+                    const hasValidTime = apt.time && apt.endTime && 
+                      String(apt.time).trim() !== '' && String(apt.endTime).trim() !== '' &&
+                      apt.time !== 'Invalid Date' && apt.endTime !== 'Invalid Date';
+                    console.log('Monthly view appointment:', apt.id, 'hasValidTime:', hasValidTime, 'time:', apt.time, 'endTime:', apt.endTime);
+                    return apt;
                   }).map(apt => {
+                    const hasValidTime = apt.time && apt.endTime && 
+                      String(apt.time).trim() !== '' && String(apt.endTime).trim() !== '' &&
+                      apt.time !== 'Invalid Date' && apt.endTime !== 'Invalid Date';
                     const style = getCategoryStyle(apt.category);
                     return (
                       <div key={apt.id} className="calendar-appointment" style={{ backgroundColor: style.color, color: style.textColor }} onClick={() => {
                         handleEditAppointment(apt);
                       }}>
-                        <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
+                        <div className="calendar-appointment-time">
+                          {hasValidTime ? `${apt.time} - ${apt.endTime}` : 'All Day'}
+                        </div>
                         <div className="calendar-appointment-title">{apt.title}</div>
                       </div>
                     );
@@ -747,9 +754,11 @@ const Calendar = () => {
                         <div key={time} className="calendar-time-slot"></div>
                       ))}
                       {dayAppointments.filter(apt => {
-                        const hasTime = apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim();
-                        console.log('Weekly view appointment filter:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
-                        return hasTime;
+                        const hasValidTime = apt.time && apt.endTime && 
+                          String(apt.time).trim() !== '' && String(apt.endTime).trim() !== '' &&
+                          apt.time !== 'Invalid Date' && apt.endTime !== 'Invalid Date';
+                        console.log('Weekly view appointment filter:', apt.id, 'hasValidTime:', hasValidTime, 'time:', apt.time, 'endTime:', apt.endTime);
+                        return hasValidTime;
                       }).map(apt => {
                         const style = getCategoryStyle(apt.category);
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
@@ -768,6 +777,29 @@ const Calendar = () => {
                             handleEditAppointment(apt);
                           }}>
                             <div className="calendar-appointment-time">{apt.time} - {apt.endTime}</div>
+                            <div className="calendar-appointment-title">{apt.title}</div>
+                          </div>
+                        );
+                      })}
+                      {/* All Day appointments */}
+                      {dayAppointments.filter(apt => {
+                        const hasValidTime = apt.time && apt.endTime && 
+                          String(apt.time).trim() !== '' && String(apt.endTime).trim() !== '' &&
+                          apt.time !== 'Invalid Date' && apt.endTime !== 'Invalid Date';
+                        return !hasValidTime;
+                      }).map(apt => {
+                        const style = getCategoryStyle(apt.category);
+                        return (
+                          <div key={apt.id} className="calendar-appointment calendar-all-day" style={{
+                            backgroundColor: style.color,
+                            color: style.textColor,
+                            position: 'relative',
+                            marginBottom: '2px',
+                            padding: '2px 4px',
+                            fontSize: '11px'
+                          }} onClick={() => {
+                            handleEditAppointment(apt);
+                          }}>
                             <div className="calendar-appointment-title">{apt.title}</div>
                           </div>
                         );
@@ -802,8 +834,10 @@ const Calendar = () => {
                   <div key={time} className="calendar-time-slot"></div>
                 ))}
                 {getAppointmentsForDate(currentDate).filter(apt => {
-                  const hasTime = apt.time && apt.endTime && String(apt.time).trim() && String(apt.endTime).trim();
-                  console.log('Daily view appointment filter:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime);
+                  const hasTime = apt.time && apt.endTime && 
+                    String(apt.time).trim() !== '' && String(apt.endTime).trim() !== '' &&
+                    apt.time !== 'Invalid Date' && apt.endTime !== 'Invalid Date';
+                  console.log('Daily view appointment filter:', apt.id, 'hasTime:', hasTime, 'time:', apt.time, 'endTime:', apt.endTime, 'appointmentDate:', apt.appointmentDate);
                   return hasTime;
                 }).map(apt => {
                   const style = getCategoryStyle(apt.category);
@@ -828,6 +862,32 @@ const Calendar = () => {
                     </div>
                   );
                 })}
+                {/* All Day appointments */}
+                <div className="calendar-all-day-section" style={{ position: 'absolute', top: '0', left: '0', right: '0', background: '#f8f9fa', borderBottom: '1px solid #dee2e6', padding: '4px' }}>
+                  {getAppointmentsForDate(currentDate).filter(apt => {
+                    const hasValidTime = apt.time && apt.endTime && 
+                      String(apt.time).trim() !== '' && String(apt.endTime).trim() !== '' &&
+                      apt.time !== 'Invalid Date' && apt.endTime !== 'Invalid Date';
+                    return !hasValidTime;
+                  }).map(apt => {
+                    const style = getCategoryStyle(apt.category);
+                    return (
+                      <div key={apt.id} className="calendar-appointment calendar-all-day" style={{
+                        backgroundColor: style.color,
+                        color: style.textColor,
+                        marginBottom: '2px',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        cursor: 'pointer'
+                      }} onClick={() => {
+                        handleEditAppointment(apt);
+                      }}>
+                        <div className="calendar-appointment-title">{apt.title}</div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
