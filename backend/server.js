@@ -70,7 +70,7 @@ app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     message: 'Precision Cabling & Automation API is running',
-    version: '2.1.2-admin-fix',
+    version: '2.1.3-emergency-fix',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -102,6 +102,22 @@ app.post('/api/emergency-admin-reset', async (req, res) => {
     const bcrypt = (await import('bcrypt')).default;
     const { query } = await import('./config/database.js');
     
+    // Ensure users table exists first
+    await query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        first_name VARCHAR(100) NOT NULL,
+        last_name VARCHAR(100) NOT NULL,
+        phone VARCHAR(20),
+        role VARCHAR(50) DEFAULT 'customer',
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    
     // Hash the default admin password
     const hashedPassword = await bcrypt.hash('Admin123!', 12);
     
@@ -126,6 +142,31 @@ app.post('/api/emergency-admin-reset', async (req, res) => {
     console.error('Admin reset failed:', error);
     res.status(500).json({ 
       error: { message: 'Admin reset failed', details: error.message } 
+    });
+  }
+});
+
+// Simple admin check endpoint
+app.get('/api/check-admin', async (req, res) => {
+  try {
+    const { query } = await import('./config/database.js');
+    const result = await query('SELECT email, role, is_active FROM users WHERE email = $1', ['admin@precisioncabling.com']);
+    
+    if (result.rows.length === 0) {
+      res.json({ exists: false, message: 'Admin user not found' });
+    } else {
+      const user = result.rows[0];
+      res.json({ 
+        exists: true, 
+        email: user.email, 
+        role: user.role, 
+        active: user.is_active 
+      });
+    }
+  } catch (error) {
+    console.error('Admin check failed:', error);
+    res.status(500).json({ 
+      error: { message: 'Admin check failed', details: error.message } 
     });
   }
 });
