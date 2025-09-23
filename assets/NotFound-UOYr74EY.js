@@ -1,0 +1,1 @@
+import{j as o}from"./index-BcWSzOQo.js";import"./vendor-DPLMwiL-.js";const t=()=>o.jsxs("div",{className:"page-content",children:[o.jsx("h1",{children:"404 - Page Not Found"}),o.jsx("p",{children:"The page you are looking for does not exist."})]});export{t as default};
