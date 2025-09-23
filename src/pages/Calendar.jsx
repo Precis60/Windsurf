@@ -815,7 +815,7 @@ const Calendar = () => {
         {/* Daily Calendar Grid */}
         {currentView === 'daily' && (
           <div className="calendar-daily-grid">
-            {/* Time slots column */}
+              {/* Time slots column */}
             <div className="calendar-time-slots">
               <div className="calendar-time-slot-header"></div>
               {generateTimeSlots().map((time, index) => (

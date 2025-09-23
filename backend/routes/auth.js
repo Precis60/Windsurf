@@ -59,7 +59,7 @@ router.post('/register', [
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       jwtSecret,
-      { expiresIn: '24h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
     );
 
     res.status(201).json({
@@ -140,7 +140,7 @@ router.post('/login', [
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
       jwtSecret,
-      { expiresIn: '24h' }
+      { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
     );
 
     res.json({
@@ -196,6 +196,54 @@ router.get('/profile', authenticateToken, async (req, res) => {
     console.error('Profile fetch error:', error);
     res.status(500).json({ 
       error: { message: 'Failed to fetch profile' } 
+    });
+  }
+});
+
+// Refresh JWT token
+router.post('/refresh', authenticateToken, async (req, res) => {
+  try {
+    // Get user info from the authenticated token
+    const userId = req.user.userId;
+    
+    // Fetch fresh user data to ensure user is still active
+    const result = await query(
+      'SELECT id, email, first_name, last_name, role, is_active FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (result.rows.length === 0 || !result.rows[0].is_active) {
+      return res.status(401).json({ 
+        error: { message: 'User not found or inactive' } 
+      });
+    }
+
+    const user = result.rows[0];
+
+    // Generate new JWT token
+    const jwtSecret = process.env.JWT_SECRET || 'dev-fallback-jwt-secret-change-me';
+    const newToken = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      jwtSecret,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '30d' }
+    );
+
+    res.json({
+      message: 'Token refreshed successfully',
+      token: newToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        role: user.role
+      }
+    });
+
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(500).json({ 
+      error: { message: 'Token refresh failed' } 
     });
   }
 });
