@@ -763,11 +763,11 @@ const Calendar = () => {
                         const style = getCategoryStyle(apt.category);
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
                         const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
-                        // Calculate position: each 15-minute slot = 15px (96 slots × 15px = 1440px total for 24 hours)
+                        // Calculate position: each 15-minute slot = 15px + 1px border = 16px total
                         const startSlot = Math.floor((startHours * 60 + startMinutes) / 15); // Which 15-minute slot
                         const endSlot = Math.floor((endHours * 60 + endMinutes) / 15);
-                        const startPosition = startSlot * 15; // 15px per slot
-                        const endPosition = endSlot * 15;
+                        const startPosition = startSlot * 16; // 16px per slot (15px + 1px border)
+                        const endPosition = endSlot * 16;
                         console.log(`Weekly view positioning - ${apt.title}: ${apt.time}-${apt.endTime}, startSlot: ${startSlot}, endSlot: ${endSlot}, startPosition: ${startPosition}px`);
                         const height = Math.max(30, endPosition - startPosition);
                         return (
@@ -846,11 +846,11 @@ const Calendar = () => {
                   const style = getCategoryStyle(apt.category);
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
                   const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
-                  // Calculate position: each 15-minute slot = 15px (96 slots × 15px = 1440px total for 24 hours)
+                  // Calculate position: each 15-minute slot = 15px + 1px border = 16px total
                   const startSlot = Math.floor((startHours * 60 + startMinutes) / 15); // Which 15-minute slot
                   const endSlot = Math.floor((endHours * 60 + endMinutes) / 15);
-                  const startPosition = startSlot * 15; // 15px per slot
-                  const endPosition = endSlot * 15;
+                  const startPosition = startSlot * 16; // 16px per slot (15px + 1px border)
+                  const endPosition = endSlot * 16;
                   const height = Math.max(30, endPosition - startPosition);
                   console.log(`Daily view positioning - ${apt.title}: ${apt.time}-${apt.endTime}, startSlot: ${startSlot}, endSlot: ${endSlot}, startPosition: ${startPosition}px, height: ${height}px`);
                   return (
