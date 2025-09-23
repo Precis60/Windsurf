@@ -764,10 +764,11 @@ const Calendar = () => {
                         const [startHours, startMinutes] = apt.time.split(':').map(Number);
                         const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                         // Calculate position: each 15-minute slot = 15px (96 slots × 15px = 1440px total for 24 hours)
-                        const startPositionInMinutes = startHours * 60 + startMinutes;
-                        const endPositionInMinutes = endHours * 60 + endMinutes;
-                        const startPosition = (startPositionInMinutes / 15) * 15; // Convert to 15px per 15-minute slot
-                        const endPosition = (endPositionInMinutes / 15) * 15;
+                        const startSlot = Math.floor((startHours * 60 + startMinutes) / 15); // Which 15-minute slot
+                        const endSlot = Math.floor((endHours * 60 + endMinutes) / 15);
+                        const startPosition = startSlot * 15; // 15px per slot
+                        const endPosition = endSlot * 15;
+                        console.log(`Weekly view positioning - ${apt.title}: ${apt.time}-${apt.endTime}, startSlot: ${startSlot}, endSlot: ${endSlot}, startPosition: ${startPosition}px`);
                         const height = Math.max(30, endPosition - startPosition);
                         return (
                           <div key={apt.id} className="calendar-appointment" style={{
@@ -821,7 +822,7 @@ const Calendar = () => {
             <div className="calendar-time-slots">
               <div className="calendar-time-slot-header"></div>
               {generateTimeSlots().map((time, index) => (
-                <div key={time} className="calendar-time-slot">
+                <div key={time} className="calendar-time-slot" title={`Slot ${index}: ${time}`}>
                   {index % 4 === 0 ? time : ''}
                 </div>
               ))}
@@ -846,11 +847,12 @@ const Calendar = () => {
                   const [startHours, startMinutes] = apt.time.split(':').map(Number);
                   const [endHours, endMinutes] = apt.endTime.split(':').map(Number);
                   // Calculate position: each 15-minute slot = 15px (96 slots × 15px = 1440px total for 24 hours)
-                  const startPositionInMinutes = startHours * 60 + startMinutes;
-                  const endPositionInMinutes = endHours * 60 + endMinutes;
-                  const startPosition = (startPositionInMinutes / 15) * 15; // Convert to 15px per 15-minute slot
-                  const endPosition = (endPositionInMinutes / 15) * 15;
+                  const startSlot = Math.floor((startHours * 60 + startMinutes) / 15); // Which 15-minute slot
+                  const endSlot = Math.floor((endHours * 60 + endMinutes) / 15);
+                  const startPosition = startSlot * 15; // 15px per slot
+                  const endPosition = endSlot * 15;
                   const height = Math.max(30, endPosition - startPosition);
+                  console.log(`Daily view positioning - ${apt.title}: ${apt.time}-${apt.endTime}, startSlot: ${startSlot}, endSlot: ${endSlot}, startPosition: ${startPosition}px, height: ${height}px`);
                   return (
                     <div key={apt.id} className="calendar-appointment" style={{
                       top: `${startPosition}px`,
