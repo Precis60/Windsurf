@@ -405,6 +405,12 @@ const Calendar = () => {
     return days;
   };
 
+  // Navigate to daily view when a date is clicked
+  const handleDayClick = (date) => {
+    setCurrentDate(date);
+    setCurrentView('daily');
+  };
+
   // Navigation functions
   const navigateDate = (direction) => {
     const newDate = new Date(currentDate);
@@ -698,7 +704,7 @@ const Calendar = () => {
               const isToday = date.toDateString() === new Date().toDateString();
               return (
                 <div key={index} className={`calendar-day ${!isCurrentMonth ? 'calendar-day-muted' : ''} ${isToday ? 'calendar-day-today' : ''}`}>
-                  <div className="calendar-day-date">{date.getDate()}</div>
+                  <div className="calendar-day-date" onClick={() => handleDayClick(date)}>{date.getDate()}</div>
                   {dayAppointments.map(apt => {
                     const hasValidTime = apt.time && apt.endTime && 
                       String(apt.time).trim() !== '' && String(apt.endTime).trim() !== '' &&

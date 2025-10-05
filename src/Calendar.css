@@ -289,20 +289,29 @@
   color: #6c757d;
 }
 
-.calendar-day-today {
-  background: #e3f2fd !important;
-  border: 2px solid #2196f3 !important;
+.calendar-day-today .calendar-day-date {
+  background-color: #22314a;
+  color: #fff;
 }
 
 .calendar-day-date {
-  font-weight: 700;
-  color: #22314a;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 8px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
 }
 
-.calendar-day-muted .calendar-day-date {
-  color: #6c757d;
+.calendar-day-date:hover {
+  background-color: #e9ecef;
 }
 
 /* Weekly Calendar Grid */
