@@ -8,9 +8,9 @@ A comprehensive business management platform for Precision Cabling Solutions, bu
 
 - **Frontend**: React 19 + Vite + React Router
 - **Backend**: Node.js + Express + PostgreSQL
-- **Database**: AWS RDS PostgreSQL (secure, scalable)
+- **Database**: Supabase PostgreSQL (secure, scalable)
 - **Authentication**: JWT-based with bcrypt password hashing
-- **Deployment**: Netlify (frontend) + AWS (backend & database)
+- **Deployment**: GitHub Pages (frontend) + Render (backend) + Supabase (database)
 
 ## 🚀 Features
 
@@ -34,16 +34,18 @@ A comprehensive business management platform for Precision Cabling Solutions, bu
 - PostgreSQL database integration
 
 ### Database
-- AWS RDS PostgreSQL for high availability
+- Supabase PostgreSQL for high availability
 - Encrypted connections (SSL/TLS)
 - Automated backups and point-in-time recovery
+- Connection pooling for serverless environments
 - Optimized with indexes for performance
 - Sample data for testing
 
 ## 📋 Prerequisites
 
 - Node.js 18+ and npm
-- AWS Account (for RDS database)
+- Supabase Account (for database)
+- Render Account (for backend hosting)
 - Git
 
 ## 🛠️ Installation & Setup
@@ -69,12 +71,12 @@ brew install node
 **Other platforms:**
 - Download from [nodejs.org](https://nodejs.org/)
 
-### 3. Setup AWS RDS Database
+### 3. Setup Supabase Database
 
-Follow the detailed guide in [`backend/AWS_RDS_SETUP.md`](backend/AWS_RDS_SETUP.md) to:
-- Create PostgreSQL RDS instance
-- Configure security groups
+Follow the detailed guide in [`DATABASE_SETUP_INSTRUCTIONS.md`](DATABASE_SETUP_INSTRUCTIONS.md) to:
+- Create Supabase project
 - Get connection credentials
+- Configure environment variables
 
 ### 4. Backend Setup
 
@@ -88,11 +90,15 @@ npm install
 # Create environment file
 cp .env.example .env
 
-# Edit .env with your AWS RDS credentials
-# DB_HOST=your-rds-endpoint.amazonaws.com
-# DB_USER=your-username
+# Edit .env with your Supabase credentials
+# DATABASE_URL=postgresql://postgres.[ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
+# Or use individual variables:
+# DB_HOST=aws-0-[region].pooler.supabase.com
+# DB_PORT=6543
+# DB_NAME=postgres
+# DB_USER=postgres.[ref]
 # DB_PASSWORD=your-password
-# etc.
+# DB_SSL=true
 
 # Setup database tables and sample data
 npm run setup-db
@@ -213,21 +219,26 @@ Windsurf/
 - **CORS Protection**: Configurable cross-origin policies
 - **SQL Injection Prevention**: Parameterized queries
 - **XSS Protection**: Helmet.js security headers
-- **Database Encryption**: SSL/TLS connections to AWS RDS
+- **Database Encryption**: SSL/TLS connections to Supabase
 
 ## 🚀 Deployment
 
-### Frontend (Netlify)
-1. Connect GitHub repository to Netlify
-2. Set build command: `npm run build`
-3. Set publish directory: `dist`
-4. Add environment variables in Netlify dashboard
+### Frontend (GitHub Pages)
+1. Build and deploy: `npm run deploy`
+2. Site will be available at: `https://precis60.github.io/Windsurf/`
+3. Automatic deployment via gh-pages package
 
-### Backend (AWS/Heroku/DigitalOcean)
-1. Deploy to your preferred platform
-2. Set environment variables
-3. Run database migrations
-4. Configure domain and SSL
+### Backend (Render)
+1. Connect GitHub repository to Render
+2. Set environment variables (DATABASE_URL, JWT_SECRET, etc.)
+3. Render will automatically deploy on git push
+4. Backend URL: `https://precision-cabling-backend.onrender.com`
+
+### Database (Supabase)
+1. Create project at https://supabase.com
+2. Copy connection pooling URL (Transaction mode)
+3. Add to Render environment variables
+4. Database automatically managed by Supabase
 
 ## 🧪 Development
 
@@ -260,9 +271,9 @@ npm test
 ### Common Issues
 
 1. **Database Connection Failed**
-   - Check AWS RDS security group settings
-   - Verify credentials in .env file
-   - Ensure RDS instance is running
+   - Check Supabase project is active (not paused)
+   - Verify DATABASE_URL in Render environment variables
+   - Ensure using connection pooling URL (port 6543)
 
 2. **Authentication Errors**
    - Check JWT_SECRET is set
