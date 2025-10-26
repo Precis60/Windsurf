@@ -5,7 +5,7 @@
 const API_BASE_URL = 'https://precision-cabling-backend.onrender.com/api';
 
 // Demo mode flag - set to false to use real backend API
-const DEMO_MODE = true;
+const DEMO_MODE = false;
 
 class SecureApiService {
   constructor() {
