@@ -264,15 +264,37 @@
   color: #fff;
 }
 
+/* Day Names Header for Monthly Calendar */
+.calendar-day-names {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background: #22314a;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
+  margin-top: 1rem;
+}
+
+.calendar-day-name {
+  background: #22314a;
+  color: #fff;
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 /* Monthly Calendar Grid */
 .calendar-monthly-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
   background: #e9ecef;
-  border-radius: 8px;
+  border-radius: 0 0 8px 8px;
   overflow: hidden;
-  margin-top: 1rem;
+  margin-top: 0;
 }
 
 .calendar-day {

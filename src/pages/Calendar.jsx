@@ -697,8 +697,19 @@ const Calendar = () => {
 
         {/* Monthly Calendar Grid */}
         {currentView === 'monthly' && (
-          <div className="calendar-monthly-grid">
-            {generateMonthlyCalendar().map((date, index) => {
+          <>
+            {/* Day Names Header */}
+            <div className="calendar-day-names">
+              <div className="calendar-day-name">Monday</div>
+              <div className="calendar-day-name">Tuesday</div>
+              <div className="calendar-day-name">Wednesday</div>
+              <div className="calendar-day-name">Thursday</div>
+              <div className="calendar-day-name">Friday</div>
+              <div className="calendar-day-name">Saturday</div>
+              <div className="calendar-day-name">Sunday</div>
+            </div>
+            <div className="calendar-monthly-grid">
+              {generateMonthlyCalendar().map((date, index) => {
               const dayAppointments = getAppointmentsForDate(date);
               const isCurrentMonth = date.getMonth() === currentDate.getMonth();
               const isToday = date.toDateString() === new Date().toDateString();
@@ -731,6 +742,7 @@ const Calendar = () => {
               );
             })}
           </div>
+          </>
         )}
 
         {/* Weekly Calendar Grid */}
