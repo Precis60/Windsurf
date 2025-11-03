@@ -61,6 +61,15 @@ const CRM = () => {
           console.error('❌ Error loading customers:', error);
           console.error('❌ Error details:', error.data);
           console.error('❌ Error message:', error.message);
+          
+          // Handle expired token
+          if (error.message && (error.message.includes('Invalid or expired token') || error.message.includes('Session expired'))) {
+            alert('Your session has expired. Please log in again.');
+            authService.logout();
+            window.location.href = '/login';
+            return;
+          }
+          
           setCustomers([]);
         }
       };
