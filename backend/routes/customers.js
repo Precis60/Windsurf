@@ -15,7 +15,7 @@ router.get('/', authenticateToken, requireRole(['admin', 'staff']), async (req, 
       SELECT id, first_name, last_name, email, phone, company, address, 
              role, client_type, notes, created_at, last_login
       FROM users 
-      WHERE role = 'customer' AND is_active = true
+      WHERE is_active = true
     `;
     
     const queryParams = [];
@@ -33,7 +33,7 @@ router.get('/', authenticateToken, requireRole(['admin', 'staff']), async (req, 
     const result = await query(queryText, queryParams);
 
     // Get total count for pagination
-    let countQuery = 'SELECT COUNT(*) FROM users WHERE role = \'customer\' AND is_active = true';
+    let countQuery = 'SELECT COUNT(*) FROM users WHERE is_active = true';
     const countParams = [];
     
     if (search) {
@@ -100,7 +100,7 @@ router.get('/:id', authenticateToken, [
       `SELECT id, first_name, last_name, email, phone, company, address, 
               role, client_type, notes, created_at, last_login
        FROM users 
-       WHERE id = $1 AND role = 'customer' AND is_active = true`,
+       WHERE id = $1 AND is_active = true`,
       [customerId]
     );
 
@@ -275,7 +275,7 @@ router.put('/:id', authenticateToken, [
 
     const result = await query(
       `UPDATE users SET ${updateFields.join(', ')} 
-       WHERE id = $${paramCount} AND role = 'customer'
+       WHERE id = $${paramCount}
        RETURNING id, first_name, last_name, email, phone, company, address, role, client_type, notes, updated_at`,
       updateValues
     );
@@ -328,7 +328,7 @@ router.delete('/:id', authenticateToken, requireRole(['admin']), [
 
     // Check if customer exists
     const customerCheck = await query(
-      "SELECT id FROM users WHERE id = $1 AND role = 'customer' AND is_active = true",
+      "SELECT id FROM users WHERE id = $1 AND is_active = true",
       [customerId]
     );
 
