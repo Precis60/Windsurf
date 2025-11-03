@@ -139,16 +139,30 @@ router.get('/:id', authenticateToken, [
 // Update customer
 router.put('/:id', authenticateToken, [
   param('id').isInt().withMessage('Invalid customer ID'),
-  body('firstName').optional().trim().isLength({ min: 1 }).withMessage('First name cannot be empty'),
-  body('lastName').optional().trim().isLength({ min: 1 }).withMessage('Last name cannot be empty'),
-  body('email').optional().isEmail().withMessage('Valid email is required'),
-  body('phone').optional().trim(),
-  body('company').optional().trim(),
-  body('address').optional().trim(),
-  body('role').optional().isIn(['customer', 'staff', 'admin']).withMessage('Invalid role'),
-  body('clientType').optional().trim(),
-  body('notes').optional().trim(),
-  body('password').optional().isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+  body('firstName').optional({ nullable: true, checkFalsy: false }).trim().isLength({ min: 1 }).withMessage('First name cannot be empty'),
+  body('lastName').optional({ nullable: true, checkFalsy: false }).trim().isLength({ min: 1 }).withMessage('Last name cannot be empty'),
+  body('email').optional({ nullable: true, checkFalsy: true }).trim().custom((value) => {
+    if (value && value.length > 0) {
+      // Only validate email format if a value is provided
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(value)) {
+        throw new Error('Valid email is required');
+      }
+    }
+    return true;
+  }),
+  body('phone').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('company').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('address').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('role').optional({ nullable: true, checkFalsy: true }).isIn(['customer', 'staff', 'admin', '']).withMessage('Invalid role'),
+  body('clientType').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('notes').optional({ nullable: true, checkFalsy: true }).trim(),
+  body('password').optional({ nullable: true, checkFalsy: true }).custom((value) => {
+    if (value && value.length > 0 && value.length < 8) {
+      throw new Error('Password must be at least 8 characters');
+    }
+    return true;
+  })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

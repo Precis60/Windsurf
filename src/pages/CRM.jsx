@@ -219,6 +219,7 @@ const CRM = () => {
       alert('Customer updated successfully!');
     } catch (error) {
       console.error('Error updating customer:', error);
+      console.error('Error details:', error.data);
       
       let errorMessage = 'Failed to update customer. ';
       
@@ -232,6 +233,14 @@ const CRM = () => {
         return;
       } else {
         errorMessage += `Error: ${error.message}`;
+        
+        // Show validation details if available
+        if (error.data && error.data.error && error.data.error.details) {
+          errorMessage += '\n\nValidation errors:';
+          error.data.error.details.forEach((detail) => {
+            errorMessage += `\n- ${detail.path || detail.param}: ${detail.msg}`;
+          });
+        }
       }
       
       alert(errorMessage);
