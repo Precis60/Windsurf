@@ -244,6 +244,22 @@ const Portal = () => {
       </div>
       
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>🔒 Security Control</h3>
+        <p>Arm and disarm security areas, monitor alarm status.</p>
+        <Link to="/security" style={{ 
+          background: '#22314a', 
+          color: 'white', 
+          border: 'none', 
+          padding: '0.75rem 1.5rem', 
+          borderRadius: '4px', 
+          cursor: 'pointer',
+          marginTop: '1rem',
+          textDecoration: 'none',
+          display: 'inline-block'
+        }}>Security System</Link>
+      </div>
+      
+      <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
         <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>🎧 Support Center</h3>
         <p>Manage support tickets and moderate appointment requests.</p>
         <Link to="/support-portal" style={{ 
