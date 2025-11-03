@@ -25,6 +25,9 @@ jobs:
       run: npm ci
       
     - name: Build
+      env:
+        VITE_API_URL: https://precision-cabling-backend.onrender.com/api
+        VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
       run: npm run build
       
     - name: Deploy to GitHub Pages

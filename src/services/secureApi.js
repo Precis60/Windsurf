@@ -1,11 +1,7 @@
 // Secure API Service - Enterprise Grade Security
-// Replaces Firebase with secure backend API
+// Production backend API
 
-// Always use the production backend URL to ensure connectivity during development
-const API_BASE_URL = 'https://precision-cabling-backend.onrender.com/api';
-
-// Demo mode flag - set to false to use real backend API
-const DEMO_MODE = false;
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://precision-cabling-backend.onrender.com/api';
 
 class SecureApiService {
   constructor() {
@@ -15,34 +11,6 @@ class SecureApiService {
 
   // Authentication Methods
   async login(email, password) {
-    if (DEMO_MODE) {
-      // Demo mode - simulate login
-      if (email === 'admin@precisioncabling.com' && password === 'Admin123!') {
-        const demoUser = {
-          id: 1,
-          email: 'admin@precisioncabling.com',
-          firstName: 'Demo',
-          lastName: 'Admin',
-          role: 'admin'
-        };
-        const demoToken = 'demo-token-' + Date.now();
-        
-        this.token = demoToken;
-        this.user = demoUser;
-        
-        localStorage.setItem('authToken', this.token);
-        localStorage.setItem('authUser', JSON.stringify(this.user));
-        
-        return {
-          token: demoToken,
-          user: demoUser,
-          message: 'Login successful (Demo Mode)'
-        };
-      } else {
-        throw new Error('Invalid credentials');
-      }
-    }
-    
     try {
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
@@ -156,64 +124,10 @@ class SecureApiService {
 
   // Calendar/Appointment Methods
   async getAppointments() {
-    if (DEMO_MODE) {
-      // Demo mode - get appointments from localStorage
-      const appointments = JSON.parse(localStorage.getItem('demo_appointments') || '[]');
-      
-      // Add some default demo appointments if none exist
-      if (appointments.length === 0) {
-        const defaultAppointments = [
-          {
-            id: 1,
-            title: 'Client Site Survey',
-            description: 'Initial site assessment for network infrastructure',
-            appointmentDate: '2025-01-20T10:00:00.000Z',
-            durationMinutes: 120,
-            status: 'scheduled',
-            createdAt: '2025-01-15T10:00:00.000Z'
-          },
-          {
-            id: 2,
-            title: 'Network Infrastructure Install',
-            description: 'Complete network setup and configuration',
-            appointmentDate: '2025-01-25T09:00:00.000Z',
-            durationMinutes: 480,
-            status: 'scheduled',
-            createdAt: '2025-01-15T14:30:00.000Z'
-          }
-        ];
-        localStorage.setItem('demo_appointments', JSON.stringify(defaultAppointments));
-        return { appointments: defaultAppointments };
-      }
-      
-      return { appointments };
-    }
-    
     return await this.secureRequest('/appointments?limit=100');
   }
 
   async createAppointment(appointmentData) {
-    if (DEMO_MODE) {
-      // Demo mode - simulate appointment creation with localStorage
-      const appointments = JSON.parse(localStorage.getItem('demo_appointments') || '[]');
-      const newAppointment = {
-        id: Date.now(),
-        ...appointmentData,
-        status: 'scheduled',
-        createdAt: new Date().toISOString()
-      };
-      appointments.push(newAppointment);
-      localStorage.setItem('demo_appointments', JSON.stringify(appointments));
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return {
-        message: 'Appointment created successfully (Demo Mode)',
-        appointment: newAppointment
-      };
-    }
-    
     return await this.secureRequest('/appointments', {
       method: 'POST',
       body: JSON.stringify(appointmentData),
@@ -235,65 +149,10 @@ class SecureApiService {
 
   // Customer/CRM Methods
   async getCustomers() {
-    if (DEMO_MODE) {
-      // Demo mode - get customers from localStorage
-      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
-      
-      // Add some default demo customers if none exist
-      if (customers.length === 0) {
-        const defaultCustomers = [
-          {
-            id: 1,
-            firstName: 'John',
-            lastName: 'Smith',
-            email: 'john.smith@abcmfg.com',
-            phone: '(555) 123-4567',
-            company: 'ABC Manufacturing Corp',
-            address: '123 Industrial Blvd, Manufacturing District, CA 90210',
-            createdAt: '2025-01-15T10:00:00.000Z'
-          },
-          {
-            id: 2,
-            firstName: 'Sarah',
-            lastName: 'Johnson',
-            email: 'sarah@officecomplex.com',
-            phone: '(555) 987-6543',
-            company: 'Office Complex LLC',
-            address: '456 Business Park Dr, Suite 200, Business District, CA 90211',
-            createdAt: '2025-01-10T14:30:00.000Z'
-          }
-        ];
-        localStorage.setItem('demo_customers', JSON.stringify(defaultCustomers));
-        return { customers: defaultCustomers };
-      }
-      
-      return { customers };
-    }
-    
     return await this.secureRequest('/customers');
   }
 
   async createCustomer(customerData) {
-    if (DEMO_MODE) {
-      // Demo mode - simulate customer creation with localStorage
-      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
-      const newCustomer = {
-        id: Date.now(),
-        ...customerData,
-        createdAt: new Date().toISOString()
-      };
-      customers.push(newCustomer);
-      localStorage.setItem('demo_customers', JSON.stringify(customers));
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return {
-        message: 'Customer created successfully (Demo Mode)',
-        customer: newCustomer
-      };
-    }
-    
     return await this.secureRequest('/customers', {
       method: 'POST',
       body: JSON.stringify(customerData),
@@ -301,34 +160,6 @@ class SecureApiService {
   }
 
   async updateCustomer(id, customerData) {
-    if (DEMO_MODE) {
-      // Demo mode - simulate customer update with localStorage
-      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
-      const customerIndex = customers.findIndex(customer => customer.id === id);
-      
-      if (customerIndex === -1) {
-        throw new Error('Customer not found');
-      }
-      
-      // Update the customer while preserving id and createdAt
-      customers[customerIndex] = {
-        ...customers[customerIndex],
-        ...customerData,
-        id: id, // Preserve original ID
-        updatedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem('demo_customers', JSON.stringify(customers));
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      return {
-        message: 'Customer updated successfully (Demo Mode)',
-        customer: customers[customerIndex]
-      };
-    }
-    
     return await this.secureRequest(`/customers/${id}`, {
       method: 'PUT',
       body: JSON.stringify(customerData),
@@ -336,27 +167,6 @@ class SecureApiService {
   }
 
   async deleteCustomer(id) {
-    if (DEMO_MODE) {
-      // Demo mode - simulate customer deletion with localStorage
-      const customers = JSON.parse(localStorage.getItem('demo_customers') || '[]');
-      const customerIndex = customers.findIndex(customer => customer.id === id);
-      
-      if (customerIndex === -1) {
-        throw new Error('Customer not found');
-      }
-      
-      // Remove the customer
-      customers.splice(customerIndex, 1);
-      localStorage.setItem('demo_customers', JSON.stringify(customers));
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      return {
-        message: 'Customer deleted successfully (Demo Mode)'
-      };
-    }
-    
     return await this.secureRequest(`/customers/${id}`, {
       method: 'DELETE',
     });
@@ -417,22 +227,6 @@ class SecureApiService {
     const hasUser = !!this.user;
     const isAuth = hasToken && hasUser;
     console.log('isAuthenticated check - token:', hasToken, 'user:', hasUser, 'result:', isAuth);
-    
-    // For development, if no auth is found, create demo auth
-    if (!isAuth && process.env.NODE_ENV !== 'production') {
-      console.log('Creating demo authentication for development...');
-      this.token = 'demo-token-' + Date.now();
-      this.user = {
-        id: 1,
-        email: 'admin@precisioncabling.com',
-        firstName: 'Demo',
-        lastName: 'Admin',
-        role: 'admin'
-      };
-      localStorage.setItem('authToken', this.token);
-      localStorage.setItem('authUser', JSON.stringify(this.user));
-      return true;
-    }
     
     return isAuth;
   }
