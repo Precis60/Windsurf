@@ -13,7 +13,7 @@ router.get('/', authenticateToken, requireRole(['admin', 'staff']), async (req, 
 
     let queryText = `
       SELECT id, first_name, last_name, email, phone, company, address, 
-             created_at, last_login
+             role, client_type, notes, created_at, last_login
       FROM users 
       WHERE role = 'customer' AND is_active = true
     `;
@@ -53,6 +53,9 @@ router.get('/', authenticateToken, requireRole(['admin', 'staff']), async (req, 
         phone: customer.phone,
         company: customer.company,
         address: customer.address,
+        role: customer.role,
+        clientType: customer.client_type,
+        notes: customer.notes,
         createdAt: customer.created_at,
         lastLogin: customer.last_login
       })),
@@ -95,7 +98,7 @@ router.get('/:id', authenticateToken, [
 
     const result = await query(
       `SELECT id, first_name, last_name, email, phone, company, address, 
-              created_at, last_login
+              role, client_type, notes, created_at, last_login
        FROM users 
        WHERE id = $1 AND role = 'customer' AND is_active = true`,
       [customerId]
@@ -117,6 +120,9 @@ router.get('/:id', authenticateToken, [
         phone: customer.phone,
         company: customer.company,
         address: customer.address,
+        role: customer.role,
+        clientType: customer.client_type,
+        notes: customer.notes,
         createdAt: customer.created_at,
         lastLogin: customer.last_login
       }
@@ -135,9 +141,14 @@ router.put('/:id', authenticateToken, [
   param('id').isInt().withMessage('Invalid customer ID'),
   body('firstName').optional().trim().isLength({ min: 1 }).withMessage('First name cannot be empty'),
   body('lastName').optional().trim().isLength({ min: 1 }).withMessage('Last name cannot be empty'),
-  body('phone').optional().isMobilePhone(),
+  body('email').optional().isEmail().withMessage('Valid email is required'),
+  body('phone').optional().trim(),
   body('company').optional().trim(),
-  body('address').optional().trim()
+  body('address').optional().trim(),
+  body('role').optional().isIn(['customer', 'staff', 'admin']).withMessage('Invalid role'),
+  body('clientType').optional().trim(),
+  body('notes').optional().trim(),
+  body('password').optional().isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -156,7 +167,7 @@ router.put('/:id', authenticateToken, [
       });
     }
 
-    const { firstName, lastName, phone, company, address } = req.body;
+    const { firstName, lastName, email, phone, company, address, role, clientType, notes, password } = req.body;
     
     const updateFields = [];
     const updateValues = [];
@@ -172,6 +183,24 @@ router.put('/:id', authenticateToken, [
       paramCount++;
       updateFields.push(`last_name = $${paramCount}`);
       updateValues.push(lastName);
+    }
+    
+    if (email !== undefined) {
+      // Check if email is already taken by another user
+      const emailCheck = await query(
+        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        [email, customerId]
+      );
+      
+      if (emailCheck.rows.length > 0) {
+        return res.status(409).json({ 
+          error: { message: 'Email already in use by another customer' } 
+        });
+      }
+      
+      paramCount++;
+      updateFields.push(`email = $${paramCount}`);
+      updateValues.push(email);
     }
     
     if (phone !== undefined) {
@@ -191,6 +220,34 @@ router.put('/:id', authenticateToken, [
       updateFields.push(`address = $${paramCount}`);
       updateValues.push(address);
     }
+    
+    // Only admin can change role
+    if (role !== undefined && req.user.role === 'admin') {
+      paramCount++;
+      updateFields.push(`role = $${paramCount}`);
+      updateValues.push(role);
+    }
+    
+    if (clientType !== undefined) {
+      paramCount++;
+      updateFields.push(`client_type = $${paramCount}`);
+      updateValues.push(clientType);
+    }
+    
+    if (notes !== undefined) {
+      paramCount++;
+      updateFields.push(`notes = $${paramCount}`);
+      updateValues.push(notes);
+    }
+    
+    // Update password if provided
+    if (password !== undefined && password.length >= 8) {
+      const bcrypt = (await import('bcrypt')).default;
+      const hashedPassword = await bcrypt.hash(password, 12);
+      paramCount++;
+      updateFields.push(`password_hash = $${paramCount}`);
+      updateValues.push(hashedPassword);
+    }
 
     if (updateFields.length === 0) {
       return res.status(400).json({ 
@@ -205,7 +262,7 @@ router.put('/:id', authenticateToken, [
     const result = await query(
       `UPDATE users SET ${updateFields.join(', ')} 
        WHERE id = $${paramCount} AND role = 'customer'
-       RETURNING id, first_name, last_name, email, phone, company, address, updated_at`,
+       RETURNING id, first_name, last_name, email, phone, company, address, role, client_type, notes, updated_at`,
       updateValues
     );
 
@@ -226,6 +283,9 @@ router.put('/:id', authenticateToken, [
         phone: customer.phone,
         company: customer.company,
         address: customer.address,
+        role: customer.role,
+        clientType: customer.client_type,
+        notes: customer.notes,
         updatedAt: customer.updated_at
       }
     });
@@ -300,7 +360,10 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
   body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   body('phone').optional().trim(),
   body('company').optional().trim(),
-  body('address').optional().trim()
+  body('address').optional().trim(),
+  body('role').optional().isIn(['customer', 'staff', 'admin']).withMessage('Invalid role'),
+  body('clientType').optional().trim(),
+  body('notes').optional().trim()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -310,7 +373,7 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
       });
     }
 
-    const { firstName, lastName, email, password, phone, company, address } = req.body;
+    const { firstName, lastName, email, password, phone, company, address, role, clientType, notes } = req.body;
 
     // Check if customer with this email already exists
     const existingCustomer = await query(
@@ -328,12 +391,14 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
     const bcrypt = (await import('bcrypt')).default;
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create customer (user with role 'customer')
+    // Create customer (user with role 'customer' by default, or specified role if admin)
+    const userRole = role || 'customer';
+    
     const result = await query(
-      `INSERT INTO users (first_name, last_name, email, password_hash, phone, company, address, role, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'customer', NOW())
-       RETURNING id, first_name, last_name, email, phone, company, address, created_at`,
-      [firstName, lastName, email, hashedPassword, phone || null, company || null, address || null]
+      `INSERT INTO users (first_name, last_name, email, password_hash, phone, company, address, role, client_type, notes, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
+       RETURNING id, first_name, last_name, email, phone, company, address, role, client_type, notes, created_at`,
+      [firstName, lastName, email, hashedPassword, phone || null, company || null, address || null, userRole, clientType || null, notes || null]
     );
 
     const newCustomer = result.rows[0];
@@ -348,6 +413,9 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
         phone: newCustomer.phone,
         company: newCustomer.company,
         address: newCustomer.address,
+        role: newCustomer.role,
+        clientType: newCustomer.client_type,
+        notes: newCustomer.notes,
         createdAt: newCustomer.created_at
       }
     });
