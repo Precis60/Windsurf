@@ -200,18 +200,7 @@ router.put('/:id', authenticateToken, [
     }
     
     if (email !== undefined) {
-      // Check if email is already taken by another user
-      const emailCheck = await query(
-        'SELECT id FROM users WHERE email = $1 AND id != $2',
-        [email, customerId]
-      );
-      
-      if (emailCheck.rows.length > 0) {
-        return res.status(409).json({ 
-          error: { message: 'Email already in use by another customer' } 
-        });
-      }
-      
+      // Email can be used by multiple customers (for multiple sites)
       paramCount++;
       updateFields.push(`email = $${paramCount}`);
       updateValues.push(email);
@@ -389,17 +378,8 @@ router.post('/', authenticateToken, requireRole(['admin', 'staff']), [
 
     const { firstName, lastName, email, password, phone, company, address, role, clientType, notes } = req.body;
 
-    // Check if customer with this email already exists
-    const existingCustomer = await query(
-      'SELECT id FROM users WHERE email = $1',
-      [email]
-    );
-
-    if (existingCustomer.rows.length > 0) {
-      return res.status(409).json({ 
-        error: { message: 'Customer with this email already exists' } 
-      });
-    }
+    // Email can be used by multiple customers (for multiple sites)
+    // No uniqueness check needed
 
     // Hash password
     const bcrypt = (await import('bcrypt')).default;

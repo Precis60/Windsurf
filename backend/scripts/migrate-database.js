@@ -13,6 +13,15 @@ async function migrateDatabase() {
     await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS notes TEXT`);
     console.log('✅ notes column added');
 
+    // Remove UNIQUE constraint from email to allow same email for multiple sites
+    console.log('Removing UNIQUE constraint from email column...');
+    try {
+      await query(`ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key`);
+      console.log('✅ Email UNIQUE constraint removed');
+    } catch (error) {
+      console.log('ℹ️  Email constraint may not exist or already removed');
+    }
+
     console.log('🎉 Database migrations completed successfully!');
     
   } catch (error) {
