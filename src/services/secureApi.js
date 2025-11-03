@@ -149,7 +149,7 @@ class SecureApiService {
 
   // Customer/CRM Methods
   async getCustomers() {
-    return await this.secureRequest('/customers');
+    return await this.secureRequest('/customers?limit=1000');
   }
 
   async createCustomer(customerData) {

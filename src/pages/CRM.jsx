@@ -46,11 +46,21 @@ const CRM = () => {
     if (isAuthenticated) {
       const loadCustomers = async () => {
         try {
+          console.log('🔍 Loading customers from API...');
           const response = await customersService.getAll();
+          console.log('📦 API Response:', response);
           const customerList = Array.isArray(response) ? response : response.customers || [];
+          console.log('👥 Customer list:', customerList);
+          console.log('📊 Number of customers:', customerList.length);
           setCustomers(customerList);
+          
+          if (customerList.length === 0) {
+            console.warn('⚠️ No customers found in response');
+          }
         } catch (error) {
-          console.error('Error loading customers:', error);
+          console.error('❌ Error loading customers:', error);
+          console.error('❌ Error details:', error.data);
+          console.error('❌ Error message:', error.message);
           setCustomers([]);
         }
       };
