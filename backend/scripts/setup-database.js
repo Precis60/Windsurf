@@ -63,6 +63,10 @@ async function setupDatabase() {
     await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address_lat DOUBLE PRECISION`);
     await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address_lng DOUBLE PRECISION`);
     await query(`ALTER TABLE appointments ADD COLUMN IF NOT EXISTS address_components JSONB`);
+    
+    // Ensure client_type and notes columns exist on users table (idempotent migrations)
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS client_type VARCHAR(50)`);
+    await query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS notes TEXT`);
 
     // Create support_tickets table
     await query(`
