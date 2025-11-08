@@ -19,10 +19,21 @@ const NewProject = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [jobs, setJobs] = useState([]);
+  const [newJob, setNewJob] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setProject((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddJob = () => {
+    if (newJob.trim() === '') return;
+    setJobs([...jobs, { id: Date.now(), description: newJob, status: 'Pending' }]);
+    setNewJob('');
+  };
+
+  const handleRemoveJob = (id) => {
+    setJobs(jobs.filter((job) => job.id !== id));
   };
 
   const handleSubmit = async (e) => {
@@ -97,8 +108,41 @@ const NewProject = () => {
         </div>
 
         <h2 style={{ color: '#22314a', marginTop: '2rem', marginBottom: '1rem' }}>Jobs</h2>
-        {/* Jobs table will go here */}
-        <p>Jobs table functionality will be added in a future step.</p>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+          <input
+            type="text"
+            placeholder="New job description"
+            value={newJob}
+            onChange={(e) => setNewJob(e.target.value)}
+            style={{ flex: 1, padding: '0.5rem' }}
+          />
+          <button type="button" onClick={handleAddJob} style={{ background: '#5cb85c', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
+            Add Job
+          </button>
+        </div>
+
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ borderBottom: '1px solid #ddd' }}>
+              <th style={{ padding: '0.5rem', textAlign: 'left' }}>Description</th>
+              <th style={{ padding: '0.5rem', textAlign: 'left' }}>Status</th>
+              <th style={{ padding: '0.5rem', textAlign: 'left' }}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {jobs.map((job) => (
+              <tr key={job.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '0.5rem' }}>{job.description}</td>
+                <td style={{ padding: '0.5rem' }}>{job.status}</td>
+                <td style={{ padding: '0.5rem' }}>
+                  <button type="button" onClick={() => handleRemoveJob(job.id)} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}>
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         <button type="submit" disabled={loading} style={{ background: '#22314a', color: 'white', padding: '0.75rem 1.5rem', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
           {loading ? 'Creating...' : 'Create Project'}
