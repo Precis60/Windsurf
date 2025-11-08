@@ -20,23 +20,96 @@ const categories = [
 ];
 
 // Test data for initial development
+const taskStatuses = ['Pending', 'In Progress', 'Completed'];
+
 const testProjects = [
   {
     id: 1,
     name: "Office Security System",
     description: "Complete security system installation for main office building",
     status: "In Progress",
-    category: "security"
+    category: "security",
+    tasks: [
+      { id: 1, name: 'Initial Survey', status: 'Completed' },
+      { id: 2, name: 'System Design', status: 'Completed' },
+      { id: 3, name: 'Installation', status: 'In Progress' },
+      { id: 4, name: 'Configuration', status: 'Pending' },
+      { id: 5, name: 'Client Training', status: 'Pending' },
+    ]
   },
   {
     id: 2,
     name: "Card Access System",
     description: "Installing card readers and access control systems",
     status: "Planning",
-    category: "access-control"
+    category: "access-control",
+    tasks: [
+      { id: 1, name: 'Requirement Analysis', status: 'Completed' },
+      { id: 2, name: 'Hardware Procurement', status: 'In Progress' },
+      { id: 3, name: 'Installation', status: 'Pending' },
+      { id: 4, name: 'Software Setup', status: 'Pending' },
+      { id: 5, name: 'Testing', status: 'Pending' },
+    ]
   },
   // ... (other test projects)
 ];
+
+const TaskStatus = ({ status, onUpdate }) => {
+  const statusIndex = taskStatuses.indexOf(status);
+
+  const handleClick = () => {
+    const nextIndex = (statusIndex + 1) % taskStatuses.length;
+    onUpdate(taskStatuses[nextIndex]);
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'Completed': return '#198754';
+      case 'In Progress': return '#0d6efd';
+      default: return '#6c757d';
+    }
+  };
+
+  return (
+    <span 
+      onClick={handleClick} 
+      style={{
+        background: getStatusColor(),
+        color: 'white',
+        padding: '0.25rem 0.5rem',
+        borderRadius: '4px',
+        fontSize: '0.75rem',
+        cursor: 'pointer'
+      }}
+    >
+      {status}
+    </span>
+  );
+};
+
+const ProjectProgressBar = ({ tasks }) => {
+  const completedTasks = tasks.filter(task => task.status === 'Completed').length;
+  const totalTasks = tasks.length;
+  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+  return (
+    <div style={{
+      width: '100%',
+      backgroundColor: '#e9ecef',
+      borderRadius: '4px',
+      overflow: 'hidden',
+      marginBottom: '1rem'
+    }}>
+      <div style={{
+        width: `${progress}%`,
+        backgroundColor: '#198754',
+        height: '10px',
+        transition: 'width 0.3s ease-in-out'
+      }}>
+      </div>
+    </div>
+  );
+};
 
 const Projects = () => {
   const navigate = useNavigate();
@@ -46,6 +119,14 @@ const Projects = () => {
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  const handleUpdateTask = (projectId, taskId, newStatus) => {
+    setProjects(projects.map(p => 
+      p.id === projectId 
+        ? { ...p, tasks: p.tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t) } 
+        : p
+    ));
+  };
 
 
   // Early return for loading state
@@ -195,6 +276,18 @@ const Projects = () => {
               </div>
               <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>{project.name}</h3>
               <p style={{ color: '#6c757d', marginBottom: '1rem' }}>{project.description}</p>
+
+              <div style={{ marginBottom: '1rem' }}>
+                <h4 style={{ color: '#22314a', marginBottom: '0.5rem' }}>Project Progress</h4>
+                <ProjectProgressBar tasks={project.tasks} />
+                <h4 style={{ color: '#22314a', marginBottom: '0.5rem' }}>Tasks</h4>
+                {project.tasks.map(task => (
+                  <div key={task.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span>{task.name}</span>
+                    <TaskStatus status={task.status} onUpdate={(newStatus) => handleUpdateTask(project.id, task.id, newStatus)} />
+                  </div>
+                ))}
+              </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{
                   background: getStatusColor(project.status),
