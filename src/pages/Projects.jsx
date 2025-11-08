@@ -55,11 +55,8 @@ const testProjects = [
 ];
 
 const TaskStatus = ({ status, onUpdate }) => {
-  const statusIndex = taskStatuses.indexOf(status);
-
-  const handleClick = () => {
-    const nextIndex = (statusIndex + 1) % taskStatuses.length;
-    onUpdate(taskStatuses[nextIndex]);
+  const handleChange = (e) => {
+    onUpdate(e.target.value);
   };
 
   const getStatusColor = () => {
@@ -71,19 +68,23 @@ const TaskStatus = ({ status, onUpdate }) => {
   };
 
   return (
-    <span 
-      onClick={handleClick} 
+    <select 
+      value={status} 
+      onChange={handleChange} 
       style={{
         background: getStatusColor(),
         color: 'white',
+        border: 'none',
         padding: '0.25rem 0.5rem',
         borderRadius: '4px',
         fontSize: '0.75rem',
         cursor: 'pointer'
       }}
     >
-      {status}
-    </span>
+      {taskStatuses.map(s => (
+        <option key={s} value={s} style={{ backgroundColor: '#fff', color: '#000' }}>{s}</option>
+      ))}
+    </select>
   );
 };
 
