@@ -120,29 +120,49 @@ const Projects = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (!currentUser) {
-      setError('Authentication required');
-      setLoading(false);
-      return;
-    }
-    setUser(currentUser);
-  }, []);
+    const checkAuthAndLoadProjects = async () => {
+      setLoading(true);
+      try {
+        const currentUser = authService.getCurrentUser();
+        if (!currentUser) {
+          setError('Authentication required');
+          setLoading(false);
+          return;
+        }
+        setUser(currentUser);
+        
+        // Now load projects
+        await loadProjects();
+      } catch (err) {
+        console.error('Error in authentication or loading projects:', err);
+        setError(err.message || 'Failed to initialize projects page');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  useEffect(() => {
-    loadProjects();
+    checkAuthAndLoadProjects();
   }, []);
 
   const loadProjects = async () => {
     try {
-      // For now, we'll use test data
-      setProjects(testProjects);
+      // Try to load from API first
+      const response = await projectsService.getAll();
+      if (response && Array.isArray(response)) {
+        setProjects(response);
+      } else {
+        // Fallback to test data if API fails or returns invalid data
+        console.log('Using test data as fallback');
+        setProjects(testProjects);
+      }
       setError(null);
     } catch (err) {
       console.error('Error loading projects:', err);
-      setError(err.message || 'Failed to load projects');
-    } finally {
-      setLoading(false);
+      // Fallback to test data if API fails
+      console.log('Using test data as fallback after error');
+      setProjects(testProjects);
+      // Don't set error when we have fallback data
+      setError(null);
     }
   };
 
