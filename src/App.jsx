@@ -29,9 +29,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminRoute = lazy(() => import("./components/AdminRoute"));
 
 function App() {
-  // Determine basename for GitHub Pages
-  const basename = process.env.NODE_ENV === 'production' ? '/Windsurf' : '';
-  
   // Authentication state
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -70,7 +67,7 @@ function App() {
   }
   
   return (
-    <Router basename={basename}>
+    <Router>
       <Header user={user} onLogout={handleLogout} />
       <main style={{ minHeight: "35vh", paddingTop: "3rem", paddingBottom: "3rem" }}>
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh', fontSize: '1.2rem', color: '#22314a' }}>Loading...</div>}>
