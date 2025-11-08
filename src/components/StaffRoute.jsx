@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { authService } from '../services/secureApi';
 
-const AdminRoute = () => {
+const StaffRoute = () => {
   const isAuthenticated = authService.isAuthenticated();
   const user = authService.getCurrentUser();
   const isAdmin = user && user.role === 'admin';
@@ -15,10 +15,10 @@ const AdminRoute = () => {
   }
 
   if (!isAdmin && !isStaff) {
-    return <Navigate to="/portal" replace />;
+    return <Navigate to="/client-portal" replace />;
   }
 
   return <Outlet />;
 };
 
-export default AdminRoute;
+export default StaffRoute;

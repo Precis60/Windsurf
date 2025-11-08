@@ -28,6 +28,7 @@ const Security = lazy(() => import("./pages/Security"));
 const Projects = lazy(() => import("./pages/Projects"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminRoute = lazy(() => import("./components/AdminRoute"));
+const StaffRoute = lazy(() => import("./components/StaffRoute"));
 
 function App() {
   // Authentication state
@@ -96,6 +97,10 @@ function App() {
               <Route path="/crm-test" element={<CRMSimple />} />
               <Route path="/support-portal" element={<SupportPortal />} />
               <Route path="/security" element={<Security />} />
+            </Route>
+
+            {/* Staff and Admin routes */}
+            <Route element={<StaffRoute />}>
               <Route path="/projects" element={<Projects />} />
             </Route>
 
