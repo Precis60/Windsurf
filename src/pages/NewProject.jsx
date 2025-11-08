@@ -1,6 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectsService } from '../services/secureApi';
+import { projectsService, customersService } from '../services/secureApi';
+
+const categories = [
+  { id: 'security', name: 'Security' },
+  { id: 'access-control', name: 'Access Control' },
+  { id: 'it', name: 'Information Technology' },
+  { id: 'cctv', name: 'CCTV' },
+  { id: 'consultation', name: 'Consultation' },
+  { id: 'maintenance', name: 'Routine Maintenance' },
+  { id: 'av', name: 'Audio Visual' },
+  { id: 'automation', name: 'Automation' },
+  { id: 'network', name: 'Network Programming' },
+  { id: 'electrical', name: 'Electrical Works' },
+  { id: 'contractor', name: 'Contractor' },
+  { id: 'garden', name: 'Garden Works' },
+  { id: 'lighting', name: 'Electrical & Lighting' }
+];
 
 const NewProject = () => {
   const navigate = useNavigate();
@@ -15,11 +31,13 @@ const NewProject = () => {
     status: 'Planning',
     requestedBy: '',
     description: '',
+    category: 'security',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [newJob, setNewJob] = useState('');
+  const [clients, setClients] = useState([]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,6 +53,20 @@ const NewProject = () => {
   const handleRemoveJob = (id) => {
     setJobs(jobs.filter((job) => job.id !== id));
   };
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const response = await customersService.getAll();
+        if (response && Array.isArray(response)) {
+          setClients(response);
+        }
+      } catch (err) {
+        console.error('Failed to fetch clients', err);
+      }
+    };
+    fetchClients();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,7 +97,12 @@ const NewProject = () => {
           </div>
           <div>
             <label>Client Name</label>
-            <input type="text" name="clientName" value={project.clientName} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem' }} />
+            <select name="clientName" value={project.clientName} onChange={handleChange} required style={{ width: '100%', padding: '0.5rem' }}>
+              <option value="">Select a client</option>
+              {clients.map(client => (
+                <option key={client.id} value={client.name}>{client.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <label>Client Address</label>
@@ -95,6 +132,14 @@ const NewProject = () => {
               <option>On Hold</option>
               <option>Completed</option>
               <option>Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label>Category</label>
+            <select name="category" value={project.category} onChange={handleChange} style={{ width: '100%', padding: '0.5rem' }}>
+              {categories.map(cat => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
             </select>
           </div>
           <div style={{ gridColumn: 'span 2' }}>
