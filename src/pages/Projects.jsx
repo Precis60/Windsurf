@@ -39,7 +39,7 @@ const testProjects = [
 
 const Projects = () => {
   // State declarations at the top level
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState(testProjects);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
