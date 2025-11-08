@@ -1,0 +1,1 @@
+import{a as t,j as e}from"./index-tN1IVQU1.js";import{N as r,O as i}from"./vendor-Dd4J3GVN.js";const c=()=>{const o=t.isAuthenticated(),s=t.isAdmin(),a=t.getCurrentUser();return!o||!a?(t.logout(),e.jsx(r,{to:"/login",replace:!0,state:{from:window.location.pathname}})):s?e.jsx(i,{}):e.jsx(r,{to:"/portal",replace:!0})};export{c as default};
