@@ -215,18 +215,19 @@ class SecureApiService {
   }
 
   isAuthenticated() {
-    // Refresh token and user from localStorage if not already loaded
-    if (!this.token) {
-      this.token = localStorage.getItem('authToken');
-    }
-    if (!this.user) {
-      this.user = this.getStoredUser();
-    }
+    // Always refresh from localStorage to ensure we have the latest state
+    this.token = localStorage.getItem('authToken');
+    this.user = this.getStoredUser();
     
     const hasToken = !!this.token;
     const hasUser = !!this.user;
     const isAuth = hasToken && hasUser;
     console.log('isAuthenticated check - token:', hasToken, 'user:', hasUser, 'result:', isAuth);
+    
+    if (!isAuth) {
+      // Clear any partial state if not fully authenticated
+      this.logout();
+    }
     
     return isAuth;
   }
