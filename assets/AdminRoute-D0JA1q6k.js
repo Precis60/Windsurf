@@ -1,1 +1,0 @@
-import{a as e,j as r}from"./index-DOeokld1.js";import{N as o,O as n}from"./vendor-Dd4J3GVN.js";const f=()=>{const s=e.isAuthenticated(),t=e.getCurrentUser(),a=t&&t.role==="admin",i=t&&t.role==="staff";return!s||!t?(e.logout(),r.jsx(o,{to:"/login",replace:!0,state:{from:window.location.pathname}})):!a&&!i?r.jsx(o,{to:"/portal",replace:!0}):r.jsx(n,{})};export{f as default};
