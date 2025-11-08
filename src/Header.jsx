@@ -13,9 +13,6 @@ const pages = [
 
 const staffPages = [
   { name: "Dashboard", path: "/dashboard" },
-  { name: "Calendar", path: "/calendar" },
-  { name: "CRM", path: "/crm" },
-  { name: "Support Portal", path: "/support-portal" },
   { name: "Company Portal", path: "/portal" }
 ];
 
