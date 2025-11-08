@@ -292,7 +292,23 @@ const Portal = () => {
       </div>
 
       <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
-        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>👤 Client Portal Access</h3>
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>� Projects</h3>
+        <p>Manage ongoing projects, track progress, and handle resources.</p>
+        <Link to="/projects" style={{ 
+          background: '#22314a', 
+          color: 'white', 
+          border: 'none', 
+          padding: '0.75rem 1.5rem', 
+          borderRadius: '4px', 
+          cursor: 'pointer',
+          marginTop: '1rem',
+          textDecoration: 'none',
+          display: 'inline-block'
+        }}>Manage Projects</Link>
+      </div>
+
+      <div style={{ background: '#f8f9fa', padding: '1.5rem', borderRadius: '8px', border: '1px solid #e9ecef' }}>
+        <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>�👤 Client Portal Access</h3>
         <p>View the client-facing portal (for testing or support).</p>
         <Link to="/client-portal" style={{ 
           background: '#667eea', 

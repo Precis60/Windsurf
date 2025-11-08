@@ -25,6 +25,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SupportRequest = lazy(() => import("./pages/SupportRequest"));
 const Security = lazy(() => import("./pages/Security"));
+const Projects = lazy(() => import("./pages/Projects"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminRoute = lazy(() => import("./components/AdminRoute"));
 
@@ -95,6 +96,7 @@ function App() {
               <Route path="/crm-test" element={<CRMSimple />} />
               <Route path="/support-portal" element={<SupportPortal />} />
               <Route path="/security" element={<Security />} />
+              <Route path="/projects" element={<Projects />} />
             </Route>
 
             {/* General authenticated routes */}
