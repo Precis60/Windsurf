@@ -1,0 +1,1 @@
+import{a as s,j as t}from"./index-D2V2PzhQ.js";import{N as i,O as a}from"./vendor-Dd4J3GVN.js";const u=()=>{const e=s.isAuthenticated(),o=s.isAdmin();return e?o?t.jsx(a,{}):t.jsx(i,{to:"/portal"}):t.jsx(i,{to:"/login"})};export{u as default};
