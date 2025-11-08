@@ -191,6 +191,12 @@ class SecureApiService {
     });
   }
 
+  async deleteProject(id) {
+    return await this.secureRequest(`/projects/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Support Methods
   async getSupportTickets() {
     return await this.secureRequest('/support');
@@ -289,6 +295,7 @@ export const projectsService = {
   getAll: () => secureApi.getProjects(),
   create: (data) => secureApi.createProject(data),
   update: (id, data) => secureApi.updateProject(id, data),
+  delete: (id) => secureApi.deleteProject(id),
 };
 
 export const supportService = {

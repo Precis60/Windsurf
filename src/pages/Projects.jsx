@@ -40,52 +40,11 @@ const testProjects = [
 const Projects = () => {
   // State declarations at the top level
   const [projects, setProjects] = useState(testProjects);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load projects on component mount
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        // Check authentication first
-        const currentUser = authService.getCurrentUser();
-        if (!currentUser) {
-          setError('Authentication required');
-          setLoading(false);
-          return;
-        }
-
-        // Try to load projects from API
-        try {
-          console.log('Fetching projects from API...');
-          const response = await projectsService.getAll();
-          console.log('API Response:', response);
-          
-          if (response && Array.isArray(response)) {
-            setProjects(response);
-          } else {
-            console.log('API returned invalid data, using test data');
-            setProjects(testProjects);
-          }
-          setError(null);
-        } catch (err) {
-          console.error('Error loading projects from API:', err);
-          console.log('Using test data as fallback');
-          setProjects(testProjects);
-          setError(null);
-        }
-      } catch (err) {
-        console.error('Error in authentication:', err);
-        setError(err.message || 'Authentication failed');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProjects();
-  }, []);
 
   // Early return for loading state
   if (loading) {
