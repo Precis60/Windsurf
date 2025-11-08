@@ -1,1 +1,0 @@
-import{j as e}from"./index-BpfIgLrY.js";import"./vendor-fHjEb_wq.js";const o=()=>e.jsxs("div",{className:"page-content",children:[e.jsx("h1",{children:"Our Services"}),e.jsx("p",{children:"Explore our wide range of cabling and automation services tailored to your needs."})]});export{o as default};

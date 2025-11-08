@@ -1,4 +1,4 @@
-import{j as e,s as m}from"./index-BpfIgLrY.js";import{b as n}from"./vendor-fHjEb_wq.js";const y=()=>{const[i,l]=n.useState({name:"",email:"",phone:"",company:"",subject:"",description:"",priority:"medium",category:"general"}),[t,d]=n.useState(!1),[x,p]=n.useState(!1),[c,s]=n.useState(""),r=o=>{l({...i,[o.target.name]:o.target.value}),s("")},u=async o=>{o.preventDefault(),d(!0),s("");try{const a={subject:`[${i.name}] ${i.subject}`,description:`
+import{j as e,s as m}from"./index-DEqkr8Xv.js";import{b as n}from"./vendor-fHjEb_wq.js";const y=()=>{const[i,l]=n.useState({name:"",email:"",phone:"",company:"",subject:"",description:"",priority:"medium",category:"general"}),[t,d]=n.useState(!1),[x,p]=n.useState(!1),[c,s]=n.useState(""),r=o=>{l({...i,[o.target.name]:o.target.value}),s("")},u=async o=>{o.preventDefault(),d(!0),s("");try{const a={subject:`[${i.name}] ${i.subject}`,description:`
 Contact Information:
 - Name: ${i.name}
 - Email: ${i.email}

@@ -1,0 +1,1 @@
+import{a as e,j as r}from"./index-DEqkr8Xv.js";import{N as o,O as n}from"./vendor-fHjEb_wq.js";const f=()=>{const a=e.isAuthenticated(),t=e.getCurrentUser(),s=t&&t.role==="admin",i=t&&t.role==="staff";return!a||!t?(e.logout(),r.jsx(o,{to:"/login",replace:!0,state:{from:window.location.pathname}})):!s&&!i?r.jsx(o,{to:"/client-portal",replace:!0}):r.jsx(n,{})};export{f as default};

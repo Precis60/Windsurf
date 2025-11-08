@@ -1,0 +1,1 @@
+import{j as e}from"./index-DEqkr8Xv.js";import"./vendor-fHjEb_wq.js";const s=()=>e.jsxs("div",{className:"page-content",children:[e.jsx("h1",{children:"About Us"}),e.jsx("p",{children:"Learn more about Precision Cabling & Automation and our experienced team."})]});export{s as default};
