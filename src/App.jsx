@@ -26,6 +26,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SupportRequest = lazy(() => import("./pages/SupportRequest"));
 const Security = lazy(() => import("./pages/Security"));
 const Projects = lazy(() => import("./pages/Projects"));
+const NewProject = lazy(() => import("./pages/NewProject"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminRoute = lazy(() => import("./components/AdminRoute"));
 const StaffRoute = lazy(() => import("./components/StaffRoute"));
@@ -102,6 +103,7 @@ function App() {
             {/* Staff and Admin routes */}
             <Route element={<StaffRoute />}>
               <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/new" element={<NewProject />} />
             </Route>
 
             {/* General authenticated routes */}

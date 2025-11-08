@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService, projectsService } from '../services/secureApi';
 
 // Project categories
@@ -38,6 +39,7 @@ const testProjects = [
 ];
 
 const Projects = () => {
+  const navigate = useNavigate();
   // State declarations at the top level
   const [projects, setProjects] = useState(testProjects);
   const [loading, setLoading] = useState(false);
@@ -88,7 +90,7 @@ const Projects = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 style={{ color: '#22314a', margin: 0 }}>Projects</h1>
         <button
-          onClick={() => console.log('New project clicked')}
+          onClick={() => navigate('/projects/new')}
           style={{
             background: '#22314a',
             color: 'white',
