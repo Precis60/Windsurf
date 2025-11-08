@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectsService, customersService } from '../services/secureApi';
 
+const taskStatuses = ['Pending', 'In Progress', 'Completed'];
+
 const categories = [
   { id: 'security', name: 'Security' },
   { id: 'access-control', name: 'Access Control' },
@@ -17,6 +19,63 @@ const categories = [
   { id: 'garden', name: 'Garden Works' },
   { id: 'lighting', name: 'Electrical & Lighting' }
 ];
+
+const TaskStatus = ({ status, onUpdate }) => {
+  const statusIndex = taskStatuses.indexOf(status);
+
+  const handleClick = () => {
+    const nextIndex = (statusIndex + 1) % taskStatuses.length;
+    onUpdate(taskStatuses[nextIndex]);
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'Completed': return '#198754';
+      case 'In Progress': return '#0d6efd';
+      default: return '#6c757d';
+    }
+  };
+
+  return (
+    <span 
+      onClick={handleClick} 
+      style={{
+        background: getStatusColor(),
+        color: 'white',
+        padding: '0.25rem 0.5rem',
+        borderRadius: '4px',
+        fontSize: '0.75rem',
+        cursor: 'pointer'
+      }}
+    >
+      {status}
+    </span>
+  );
+};
+
+const ProjectProgressBar = ({ tasks }) => {
+  const completedTasks = tasks.filter(task => task.status === 'Completed').length;
+  const totalTasks = tasks.length;
+  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+  return (
+    <div style={{
+      width: '100%',
+      backgroundColor: '#e9ecef',
+      borderRadius: '4px',
+      overflow: 'hidden',
+      marginBottom: '1rem'
+    }}>
+      <div style={{
+        width: `${progress}%`,
+        backgroundColor: '#198754',
+        height: '10px',
+        transition: 'width 0.3s ease-in-out'
+      }}>
+      </div>
+    </div>
+  );
+};
 
 const NewProject = () => {
   const navigate = useNavigate();
@@ -35,8 +94,8 @@ const NewProject = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [jobs, setJobs] = useState([]);
-  const [newJob, setNewJob] = useState('');
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
   const [clients, setClients] = useState([]);
 
   const handleChange = (e) => {
@@ -44,14 +103,18 @@ const NewProject = () => {
     setProject((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddJob = () => {
-    if (newJob.trim() === '') return;
-    setJobs([...jobs, { id: Date.now(), description: newJob, status: 'Pending' }]);
-    setNewJob('');
+  const handleAddTask = () => {
+    if (newTask.trim() === '') return;
+    setTasks([...tasks, { id: Date.now(), description: newTask, status: 'Pending' }]);
+    setNewTask('');
   };
 
-  const handleRemoveJob = (id) => {
-    setJobs(jobs.filter((job) => job.id !== id));
+  const handleRemoveTask = (id) => {
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const handleUpdateTask = (taskId, newStatus) => {
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, status: newStatus } : t));
   };
 
   useEffect(() => {
@@ -152,17 +215,18 @@ const NewProject = () => {
           </div>
         </div>
 
-        <h2 style={{ color: '#22314a', marginTop: '2rem', marginBottom: '1rem' }}>Jobs</h2>
+        <h2 style={{ color: '#22314a', marginTop: '2rem', marginBottom: '1rem' }}>Tasks</h2>
+        <ProjectProgressBar tasks={tasks} />
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
           <input
             type="text"
-            placeholder="New job description"
-            value={newJob}
-            onChange={(e) => setNewJob(e.target.value)}
+            placeholder="New task description"
+            value={newTask}
+            onChange={(e) => setNewTask(e.target.value)}
             style={{ flex: 1, padding: '0.5rem' }}
           />
-          <button type="button" onClick={handleAddJob} style={{ background: '#5cb85c', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
-            Add Job
+          <button type="button" onClick={handleAddTask} style={{ background: '#5cb85c', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}>
+            Add Task
           </button>
         </div>
 
@@ -175,12 +239,14 @@ const NewProject = () => {
             </tr>
           </thead>
           <tbody>
-            {jobs.map((job) => (
-              <tr key={job.id} style={{ borderBottom: '1px solid #eee' }}>
-                <td style={{ padding: '0.5rem' }}>{job.description}</td>
-                <td style={{ padding: '0.5rem' }}>{job.status}</td>
+            {tasks.map((task) => (
+              <tr key={task.id} style={{ borderBottom: '1px solid #eee' }}>
+                <td style={{ padding: '0.5rem' }}>{task.description}</td>
                 <td style={{ padding: '0.5rem' }}>
-                  <button type="button" onClick={() => handleRemoveJob(job.id)} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}>
+                  <TaskStatus status={task.status} onUpdate={(newStatus) => handleUpdateTask(task.id, newStatus)} />
+                </td>
+                <td style={{ padding: '0.5rem' }}>
+                  <button type="button" onClick={() => handleRemoveTask(task.id)} style={{ background: '#dc3545', color: 'white', border: 'none', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer' }}>
                     Remove
                   </button>
                 </td>
