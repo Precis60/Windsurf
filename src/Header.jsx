@@ -13,7 +13,8 @@ const pages = [
 
 const staffPages = [
   { name: "Dashboard", path: "/dashboard" },
-  { name: "Company Portal", path: "/portal" }
+  { name: "Company Portal", path: "/portal" },
+  { name: "Projects", path: "/projects" }
 ];
 
 const customerPages = [

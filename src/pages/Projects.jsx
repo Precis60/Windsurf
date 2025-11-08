@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { authService } from '../services/secureApi';
+import { authService, projectsService } from '../services/secureApi';
 
 // Project categories
 const categories = [
@@ -195,6 +195,22 @@ const Projects = () => {
 
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Safety check for null/undefined projects
+  if (!projects) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '3rem',
+        background: '#f8f9fa',
+        borderRadius: '8px',
+        color: '#6c757d'
+      }}>
+        <h3>No projects available</h3>
+        <p>There might be an issue loading the projects.</p>
+      </div>
+    );
+  }
 
   const filteredProjects = projects.filter(project => 
     (selectedCategory === 'all' || project.category === selectedCategory) &&
