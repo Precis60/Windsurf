@@ -115,11 +115,33 @@ const ProjectProgressBar = ({ tasks }) => {
 const Projects = () => {
   const navigate = useNavigate();
   // State declarations at the top level
-  const [projects, setProjects] = useState(testProjects);
-  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const response = await projectsService.getAll();
+        if (response && Array.isArray(response)) {
+          setProjects(response);
+        } else {
+          // Fallback to test data if API fails
+          setProjects(testProjects);
+        }
+      } catch (err) {
+        console.error('Failed to load projects, using test data as fallback.', err);
+        setError('Could not load projects. Displaying sample data.');
+        setProjects(testProjects); // Use test data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
 
   const handleUpdateTask = (projectId, taskId, newStatus) => {
     setProjects(projects.map(p => 
