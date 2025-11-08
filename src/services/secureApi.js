@@ -197,6 +197,10 @@ class SecureApiService {
     });
   }
 
+  async getProjectById(id) {
+    return await this.secureRequest(`/projects/${id}`);
+  }
+
   // Support Methods
   async getSupportTickets() {
     return await this.secureRequest('/support');
@@ -296,6 +300,7 @@ export const projectsService = {
   create: (data) => secureApi.createProject(data),
   update: (id, data) => secureApi.updateProject(id, data),
   delete: (id) => secureApi.deleteProject(id),
+  getById: (id) => secureApi.getProjectById(id),
 };
 
 export const supportService = {

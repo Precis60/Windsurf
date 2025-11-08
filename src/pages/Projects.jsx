@@ -300,7 +300,7 @@ const Projects = () => {
                   {project.status}
                 </span>
                 <button
-                  onClick={() => console.log('View details clicked', project.id)}
+                  onClick={() => navigate(`/projects/${project.id}`)}
                   style={{
                     background: 'none',
                     border: '1px solid #22314a',
