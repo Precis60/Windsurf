@@ -34,60 +34,146 @@ const testProjects = [
     status: "Planning",
     category: "access-control"
   },
-  // ... (other test projects)
+  {
+    id: 3,
+    name: "Server Room Setup",
+    description: "Setting up new server infrastructure",
+    status: "In Progress",
+    category: "it"
+  },
+  {
+    id: 4,
+    name: "Surveillance System",
+    description: "Installing HD cameras and monitoring system",
+    status: "Completed",
+    category: "cctv"
+  },
+  {
+    id: 5,
+    name: "Security Assessment",
+    description: "Comprehensive security consultation for new building",
+    status: "In Progress",
+    category: "consultation"
+  },
+  {
+    id: 6,
+    name: "Monthly System Check",
+    description: "Regular maintenance of security systems",
+    status: "Planning",
+    category: "maintenance"
+  },
+  {
+    id: 7,
+    name: "Conference Room AV",
+    description: "Setting up audio-visual equipment",
+    status: "In Progress",
+    category: "av"
+  },
+  {
+    id: 8,
+    name: "Smart Home System",
+    description: "Home automation installation",
+    status: "Planning",
+    category: "automation"
+  },
+  {
+    id: 9,
+    name: "Network Programming",
+    description: "Custom network solution development",
+    status: "In Progress",
+    category: "network"
+  },
+  {
+    id: 10,
+    name: "Electrical Upgrade",
+    description: "Upgrading electrical systems",
+    status: "Planning",
+    category: "electrical"
+  },
+  {
+    id: 11,
+    name: "Construction Support",
+    description: "Security system installation during construction",
+    status: "On Hold",
+    category: "contractor"
+  },
+  {
+    id: 12,
+    name: "Garden Lighting",
+    description: "Installing garden security lights",
+    status: "Planning",
+    category: "garden"
+  },
+  {
+    id: 13,
+    name: "LED Upgrade",
+    description: "Upgrading to energy-efficient lighting",
+    status: "In Progress",
+    category: "lighting"
+  }
 ];
 
 const Projects = () => {
-  // State declarations at the top level
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [initialized, setInitialized] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Load projects on component mount
   useEffect(() => {
-    const loadProjects = async () => {
+    const checkAuthAndLoadProjects = async () => {
+      setLoading(true);
       try {
-        // Check authentication first
         const currentUser = authService.getCurrentUser();
         if (!currentUser) {
           setError('Authentication required');
           setLoading(false);
           return;
         }
-
-        // Try to load projects from API
-        try {
-          console.log('Fetching projects from API...');
-          const response = await projectsService.getAll();
-          console.log('API Response:', response);
-          
-          if (response && Array.isArray(response)) {
-            setProjects(response);
-          } else {
-            console.log('API returned invalid data, using test data');
-            setProjects(testProjects);
-          }
-          setError(null);
-        } catch (err) {
-          console.error('Error loading projects from API:', err);
-          console.log('Using test data as fallback');
-          setProjects(testProjects);
-          setError(null);
-        }
+        setUser(currentUser);
+        
+        // Now load projects
+        await loadProjects();
       } catch (err) {
-        console.error('Error in authentication:', err);
-        setError(err.message || 'Authentication failed');
+        console.error('Error in authentication or loading projects:', err);
+        setError(err.message || 'Failed to initialize projects page');
       } finally {
         setLoading(false);
       }
     };
 
-    loadProjects();
+    checkAuthAndLoadProjects();
   }, []);
 
-  // Early return for loading state
+  const loadProjects = async () => {
+    try {
+      // Try to load from API first
+      const response = await projectsService.getAll();
+      if (response && Array.isArray(response)) {
+        setProjects(response);
+      } else {
+        // Fallback to test data if API fails or returns invalid data
+        console.log('Using test data as fallback');
+        setProjects(testProjects);
+      }
+      setError(null);
+    } catch (err) {
+      console.error('Error loading projects:', err);
+      // Fallback to test data if API fails
+      console.log('Using test data as fallback after error');
+      setProjects(testProjects);
+      // Don't set error when we have fallback data
+      setError(null);
+    }
+  };
+
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
   if (loading) {
     return (
       <div style={{ 
@@ -103,7 +189,6 @@ const Projects = () => {
     );
   }
 
-  // Early return for error state
   if (error) {
     return (
       <div style={{
@@ -116,7 +201,22 @@ const Projects = () => {
     );
   }
 
-  // Filter projects based on category and search term
+  // Safety check for null/undefined projects
+  if (!projects) {
+    return (
+      <div style={{
+        textAlign: 'center',
+        padding: '3rem',
+        background: '#f8f9fa',
+        borderRadius: '8px',
+        color: '#6c757d'
+      }}>
+        <h3>No projects available</h3>
+        <p>There might be an issue loading the projects.</p>
+      </div>
+    );
+  }
+
   const filteredProjects = projects.filter(project => 
     (selectedCategory === 'all' || project.category === selectedCategory) &&
     (project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -125,11 +225,10 @@ const Projects = () => {
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Header section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <h1 style={{ color: '#22314a', margin: 0 }}>Projects</h1>
         <button
-          onClick={() => console.log('New project clicked')}
+          onClick={() => {/* TODO: Implement project creation */}}
           style={{
             background: '#22314a',
             color: 'white',
@@ -143,7 +242,6 @@ const Projects = () => {
         </button>
       </div>
 
-      {/* Search and filter section */}
       <div style={{ marginBottom: '2rem' }}>
         <input
           type="text"
@@ -203,65 +301,64 @@ const Projects = () => {
         </div>
       </div>
 
-      {/* Projects grid */}
-      {filteredProjects.length > 0 ? (
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-          gap: '2rem' 
-        }}>
-          {filteredProjects.map((project) => (
-            <div
-              key={project.id}
-              style={{
-                background: '#f8f9fa',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                border: '1px solid #e9ecef'
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span>{categories.find(c => c.id === project.category)?.icon}</span>
-                <span style={{ 
-                  background: '#e9ecef',
-                  color: '#6c757d',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '4px',
-                  fontSize: '0.75rem'
-                }}>
-                  {categories.find(c => c.id === project.category)?.name}
-                </span>
-              </div>
-              <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>{project.name}</h3>
-              <p style={{ color: '#6c757d', marginBottom: '1rem' }}>{project.description}</p>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{
-                  background: getStatusColor(project.status),
-                  color: 'white',
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: '999px',
-                  fontSize: '0.875rem'
-                }}>
-                  {project.status}
-                </span>
-                <button
-                  onClick={() => console.log('View details clicked', project.id)}
-                  style={{
-                    background: 'none',
-                    border: '1px solid #22314a',
-                    color: '#22314a',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '4px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  View Details
-                </button>
-              </div>
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+        gap: '2rem' 
+      }}>
+        {filteredProjects.map((project) => (
+          <div
+            key={project.id}
+            style={{
+              background: '#f8f9fa',
+              padding: '1.5rem',
+              borderRadius: '8px',
+              border: '1px solid #e9ecef'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span>{categories.find(c => c.id === project.category)?.icon}</span>
+              <span style={{ 
+                background: '#e9ecef',
+                color: '#6c757d',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '4px',
+                fontSize: '0.75rem'
+              }}>
+                {categories.find(c => c.id === project.category)?.name}
+              </span>
             </div>
-          ))}
-        </div>
-      ) : (
+            <h3 style={{ color: '#22314a', marginBottom: '1rem' }}>{project.name}</h3>
+            <p style={{ color: '#6c757d', marginBottom: '1rem' }}>{project.description}</p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{
+                background: getStatusColor(project.status),
+                color: 'white',
+                padding: '0.25rem 0.75rem',
+                borderRadius: '999px',
+                fontSize: '0.875rem'
+              }}>
+                {project.status}
+              </span>
+              <button
+                onClick={() => {/* TODO: Implement project details view */}}
+                style={{
+                  background: 'none',
+                  border: '1px solid #22314a',
+                  color: '#22314a',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                View Details
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {projects.length === 0 && (
         <div style={{
           textAlign: 'center',
           padding: '3rem',
@@ -270,7 +367,7 @@ const Projects = () => {
           color: '#6c757d'
         }}>
           <h3>No projects found</h3>
-          <p>Start by creating a new project or try a different search.</p>
+          <p>Start by creating a new project.</p>
         </div>
       )}
     </div>
